@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>404 - Page Not Found | NETVXL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/style.css?v=2.2">
+    <style>
+        body {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0;
+            padding: 20px;
+        }
+        .err-container {
+            text-align: center;
+            max-width: 520px;
+            background: var(--surface-2);
+            border: 1.5px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 44px 32px;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8), 0 0 40px var(--red-glow);
+            animation: fadeUp 0.3s var(--ease) forwards;
+        }
+        .err-code {
+            font-size: 84px;
+            font-weight: 800;
+            line-height: 1;
+            color: var(--red);
+            letter-spacing: -2px;
+            text-shadow: 0 0 30px var(--red-glow);
+            margin-bottom: 12px;
+        }
+        .err-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: var(--text-1);
+            margin-bottom: 12px;
+        }
+        .err-desc {
+            font-size: 14px;
+            color: var(--text-2);
+            line-height: 1.6;
+            margin-bottom: 28px;
+        }
+        .btn-home {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 28px;
+            background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: var(--r-md);
+            text-decoration: none;
+            transition: var(--trans);
+            box-shadow: 0 4px 14px var(--red-glow);
+        }
+        .btn-home:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--red-glow);
+            filter: brightness(1.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="blob b1"></div>
+
+    <div class="err-container">
+        <div class="err-code">404</div>
+        <div class="err-title"><i class="fa-solid fa-compass" style="color: var(--red);"></i> Lost Your Way?</div>
+        <p class="err-desc">
+            The page, code, or redirection link you are trying to access does not exist, has expired, or has been moved.
+        </p>
+        <a href="/" class="btn-home">
+            <i class="fa-solid fa-house"></i>
+            <span>Return to Home Portal</span>
+        </a>
+    </div>
+
+</body>
+</html>

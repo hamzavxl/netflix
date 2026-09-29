@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix Cookie & CDK API Console | NETVXL</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=2.2">
+    <style>
+        .admin-wrap {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 30px 20px 80px;
+        }
+        .admin-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+        .ah-title {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--text-1);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .ah-title i {
+            color: var(--red);
+        }
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+        .stat-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        .sc-icon {
+            width: 48px;
+            height: 48px;
+            border-radius: var(--r-xs);
+            background: var(--red-tint);
+            color: var(--red);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        .sc-icon.active-icon { background: var(--success-tint); color: var(--success); }
+        .sc-icon.expired-icon { background: var(--error-tint); color: var(--error); }
+        .sc-val { font-size: 24px; font-weight: 800; color: var(--text-1); }
+        .sc-lbl { font-size: 12px; color: var(--text-3); font-weight: 600; text-transform: uppercase; }
+
+        .section-card {
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--r-lg);
+            padding: 24px;
+            margin-bottom: 28px;
+        }
+        .sec-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+        .sec-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .sec-title i { color: var(--red); }
+
+        .tbl-wrap {
+            overflow-x: auto;
+            border: 1px solid var(--border);
+            border-radius: var(--r-md);
+        }
+        table.dcs-tbl {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        table.dcs-tbl th {
+            background: var(--surface-3);
+            color: var(--text-3);
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        table.dcs-tbl td {
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-2);
+        }
+        table.dcs-tbl tr:last-child td { border-bottom: none; }
+        table.dcs-tbl tr:hover td { background: rgba(255,255,255,0.02); }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+        }
+        .badge.active { background: var(--success-tint); color: var(--success); border: 1px solid rgba(34,197,94,0.2); }
+        .badge.expired { background: var(--error-tint); color: var(--error); border: 1px solid rgba(239,68,68,0.2); }
+
+        .btn-check-cookies {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 14px 24px;
+            background: linear-gradient(135deg, var(--red) 0%, var(--red-dark) 100%);
+            color: #fff;
+            font-size: 14px;
+            font-weight: 700;
+            border-radius: var(--r-md);
+            cursor: pointer;
+            border: none;
+            transition: var(--trans);
+            box-shadow: 0 4px 14px var(--red-glow);
+        }
+        .btn-check-cookies:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px var(--red-glow);
+            filter: brightness(1.1);
+        }
+        .btn-check-cookies:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .cdk-gen-box {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-top: 14px;
+        }
+        .cdk-select, .cdk-num-input {
+            background: var(--surface-3);
+            border: 1px solid var(--border);
+            border-radius: var(--r-xs);
+            color: var(--text-1);
+            padding: 10px 14px;
+            font-size: 13px;
+            outline: none;
+        }
+        .btn-sec {
+            background: var(--surface-4);
+            border: 1px solid var(--border);
+            color: var(--text-1);
+            padding: 10px 18px;
+            border-radius: var(--r-xs);
+            font-weight: 600;
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--trans);
+        }
+        .btn-sec:hover { background: var(--red-tint); border-color: var(--red); color: var(--red); }
+    </style>
+</head>
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="blob b1"></div>
+
+    <div class="admin-wrap">
+
+        <!-- Header -->
+        <div class="admin-header">
+            <div class="ah-title">
+                <i class="fa-solid fa-cookie-bite"></i>
+                <span>Netflix Cookie & CDK API Console</span>
+            </div>
+            <a href="/" class="btn-sec"><i class="fa-solid fa-house"></i> Public Portal</a>
+        </div>
+
+        <!-- System Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="sc-icon"><i class="fa-solid fa-database"></i></div>
+                <div>
+                    <div class="sc-val" id="stat-total">0</div>
+                    <div class="sc-lbl">Total Account Cookies</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="sc-icon active-icon"><i class="fa-solid fa-circle-check"></i></div>
+                <div>
+                    <div class="sc-val" id="stat-active">0</div>
+                    <div class="sc-lbl">Active Valid Cookies</div>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="sc-icon expired-icon"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div>
+                    <div class="sc-val" id="stat-expired">0</div>
+                    <div class="sc-lbl">Expired / Invalid</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: API Cookie Health Check -->
+        <div class="section-card">
+            <div class="sec-header">
+                <div class="sec-title">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Netflix Cookie Health Check API</span>
+                </div>
+                <button class="btn-check-cookies" id="btn-run-check">
+                    <i class="fa-solid fa-bolt" id="btn-icon"></i>
+                    <span id="btn-text">Run Full Cookie Health Check (API)</span>
+                </button>
+            </div>
+            <p style="font-size: 13px; color: var(--text-2); margin-bottom: 18px; line-height: 1.6;">
+                Clicking the button above sends a request to Netflix FTL API to test every cookie in the database in real-time. Dead cookies are marked as <strong>Expired</strong>, while active ones update their status and timestamp.
+            </p>
+
+            <!-- Table -->
+            <div class="tbl-wrap">
+                <table class="dcs-tbl">
+                    <thead>
+                        <tr>
+                            <th># ID</th>
+                            <th>Account Email</th>
+                            <th>Plan Type</th>
+                            <th>Country</th>
+                            <th>Active Slots</th>
+                            <th>Status</th>
+                            <th>Last Verified</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cookie-table-body">
+                        <tr>
+                            <td colspan="7" style="text-align: center; color: var(--text-3); padding: 24px;">Loading cookies data...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Section: Create CDKs -->
+        <div class="section-card">
+            <div class="sec-header">
+                <div class="sec-title">
+                    <i class="fa-solid fa-key"></i>
+                    <span>Generate CDK Activation Keys (API)</span>
+                </div>
+            </div>
+            <div class="cdk-gen-box">
+                <select id="gen-plan" class="cdk-select">
+                    <option value="Phone">Phone / Tablet Plan</option>
+                    <option value="Standard">Standard Plan</option>
+                    <option value="Premium" selected>Premium 4K Plan</option>
+                    <option value="TV">Smart TV Plan</option>
+                </select>
+                <input type="number" id="gen-count" class="cdk-num-input" value="1" min="1" max="20" style="width: 80px;" placeholder="Qty">
+                <button class="btn-sec" id="btn-gen-cdk"><i class="fa-solid fa-plus"></i> Generate Key(s)</button>
+            </div>
+            <div id="gen-results-box" style="margin-top: 16px;"></div>
+        </div>
+
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <script>
+        // Disable F12 & Inspect Element
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.key === 'F12') { e.preventDefault(); e.stopPropagation(); }
+            if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C', 'K', 'i', 'j', 'c', 'k'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); }
+            if (e.ctrlKey && ['U', 'u', 'S', 's'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); }
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const btnRunCheck = document.getElementById('btn-run-check');
+            const btnIcon = document.getElementById('btn-icon');
+            const btnText = document.getElementById('btn-text');
+            const tableBody = document.getElementById('cookie-table-body');
+            
+            const statTotal = document.getElementById('stat-total');
+            const statActive = document.getElementById('stat-active');
+            const statExpired = document.getElementById('stat-expired');
+
+            const btnGenCDK = document.getElementById('btn-gen-cdk');
+            const genPlan = document.getElementById('gen-plan');
+            const genCount = document.getElementById('gen-count');
+            const genResultsBox = document.getElementById('gen-results-box');
+
+            function showToast(msg, type = 'info') {
+                const toast = document.getElementById('toast');
+                toast.textContent = msg;
+                toast.className = `toast ${type}`;
+                setTimeout(() => toast.classList.add('hidden'), 3500);
+            }
+
+            async function loadCookies() {
+                try {
+                    const res = await fetch('/api/admin/cookies');
+                    const data = await res.json();
+                    if (data.success) {
+                        renderCookies(data.cookies);
+                    }
+                } catch(err) {
+                    showToast('Failed to fetch cookies list', 'error');
+                }
+            }
+
+            function renderCookies(list) {
+                if (!list || list.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="7" style="text-align: center; color: var(--text-3); padding: 24px;">No cookies stored in database.</td></tr>`;
+                    statTotal.textContent = 0;
+                    statActive.textContent = 0;
+                    statExpired.textContent = 0;
+                    return;
+                }
+
+                let activeCount = 0;
+                let expiredCount = 0;
+
+                tableBody.innerHTML = list.map(c => {
+                    const isActive = c.status === 'Active';
+                    if (isActive) activeCount++; else expiredCount++;
+
+                    const badgeClass = isActive ? 'active' : 'expired';
+                    const badgeIcon = isActive ? 'fa-check' : 'fa-xmark';
+                    const lastCheckText = c.last_checked ? new Date(c.last_checked).toLocaleString() : 'Never';
+
+                    return `
+                        <tr>
+                            <td>#${c.id}</td>
+                            <td style="font-weight: 600; color: var(--text-1);">${c.email || 'N/A'}</td>
+                            <td>${c.plan || 'Standard'}</td>
+                            <td>${c.country || 'GLOBAL'}</td>
+                            <td><strong>${c.active_users}</strong> / ${c.max_users}</td>
+                            <td><span class="badge ${badgeClass}"><i class="fa-solid ${badgeIcon}"></i> ${c.status}</span></td>
+                            <td style="font-size: 12px; color: var(--text-3);">${lastCheckText}</td>
+                        </tr>
+                    `;
+                }).join('');
+
+                statTotal.textContent = list.length;
+                statActive.textContent = activeCount;
+                statExpired.textContent = expiredCount;
+            }
+
+            // Run Cookie Health Check Button Action
+            btnRunCheck.addEventListener('click', async () => {
+                btnRunCheck.disabled = true;
+                btnIcon.className = 'fa-solid fa-spinner fa-spin';
+                btnText.textContent = 'Verifying Cookies with Netflix...';
+
+                try {
+                    const res = await fetch('/api/admin/check-cookies', { method: 'POST' });
+                    const data = await res.json();
+                    
+                    if (data.success) {
+                        renderCookies(data.cookies);
+                        showToast(`Health check complete! Active: ${data.summary.active}, Expired: ${data.summary.expired}`, 'success');
+                    } else {
+                        showToast(data.error || 'Health check failed', 'error');
+                    }
+                } catch(err) {
+                    showToast('Network error during health check', 'error');
+                } finally {
+                    btnRunCheck.disabled = false;
+                    btnIcon.className = 'fa-solid fa-bolt';
+                    btnText.textContent = 'Run Full Cookie Health Check (API)';
+                }
+            });
+
+            // Generate CDK Button Action
+            btnGenCDK.addEventListener('click', async () => {
+                const planType = genPlan.value;
+                const count = parseInt(genCount.value) || 1;
+                btnGenCDK.disabled = true;
+
+                try {
+                    const res = await fetch('/api/admin/create-cdk', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ planType, count })
+                    });
+                    const data = await res.json();
+
+                    if (data.success && data.keys) {
+                        showToast(`Generated ${data.created} ${planType} key(s)!`, 'success');
+                        genResultsBox.innerHTML = `
+                            <div style="background: var(--surface-3); padding: 12px; border-radius: var(--r-md); border: 1px solid var(--border);">
+                                <div style="font-size: 11px; font-weight: 700; color: var(--text-3); margin-bottom: 8px;">GENERATED KEYS (${planType}):</div>
+                                ${data.keys.map(k => `<div style="font-family: monospace; font-size: 14px; font-weight: 700; color: var(--red); margin-bottom: 4px;">${k}</div>`).join('')}
+                            </div>
+                        `;
+                    } else {
+                        showToast('Failed to generate keys', 'error');
+                    }
+                } catch(err) {
+                    showToast('Error generating keys', 'error');
+                } finally {
+                    btnGenCDK.disabled = false;
+                }
+            });
+
+            // Initial load
+            loadCookies();
+        });
+    </script>
+</body>
+</html>

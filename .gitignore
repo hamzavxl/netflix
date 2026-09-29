@@ -1,0 +1,25 @@
+# Environment variables
+.env
+.env.local
+
+# Private Cookies and Account Sessions
+cookies/
+*.json
+!package.json
+!package-lock.json
+
+# SQLite Databases & logs
+*.sqlite
+*.sqlite3
+*.db
+*.log
+npm-debug.log*
+
+# Node dependencies
+node_modules/
+
+# OS and Editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

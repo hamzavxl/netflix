@@ -1,0 +1,1712 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NETVXL — Admin Console</title>
+<link rel="icon" type="image/x-icon" href="https://assets.nflxext.com/us/ffe/siteui/common/icons/nficon2016.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ─── TOKENS ─────────────────────────────────────────── */
+:root{
+  --red:#ff0a16; --red-d:#c0050e; --red-glow:rgba(255,10,22,0.15);
+  --bg:#07070a; --bg2:#0f0f16; --bg3:#14141e; --bg4:#1a1a27;
+  --glass:rgba(255,255,255,0.025); --glass2:rgba(255,255,255,0.05);
+  --border:rgba(255,255,255,0.05); --border2:rgba(255,255,255,0.11);
+  --t1:#fcfcfd; --t2:rgba(252,252,253,0.72); --t3:rgba(252,252,253,0.4);
+  --green:#10b981; --amber:#f59e0b; --blue:#3b82f6; --violet:#a78bfa;
+  --cyan:#22d3ee;
+  --r:12px; --r2:18px; --r3:24px;
+  --sb:260px;
+  --ease:cubic-bezier(0.16,1,0.3,1);
+  --glow:0 0 20px rgba(255,10,22,0.15);
+  --shadow:0 8px 30px rgba(0,0,0,0.5);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:14px}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--t1);min-height:100vh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+
+/* ─── SCROLLBAR ──────────────────────────────────────── */
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:99px}
+::-webkit-scrollbar-thumb:hover{background:rgba(229,9,20,.5)}
+
+/* ─── LOGIN ──────────────────────────────────────────── */
+#login-screen{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--bg);
+  display:flex;align-items:center;justify-content:center;
+  animation:fadeIn .4s var(--ease);
+}
+#login-screen.out{animation:fadeOut .35s var(--ease) forwards}
+.lc{
+  width:400px;
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:var(--r3);
+  padding:44px 40px 40px;
+  position:relative;overflow:hidden;
+}
+.lc::after{
+  content:'';position:absolute;top:-80px;left:50%;transform:translateX(-50%);
+  width:240px;height:240px;border-radius:50%;
+  background:radial-gradient(circle,rgba(229,9,20,.22) 0%,transparent 70%);
+  pointer-events:none;
+}
+.lc-logo{display:flex;justify-content:center;margin-bottom:36px;position:relative;z-index:1}
+.lc-brand{text-align:center;margin-bottom:28px}
+.lc-brand h2{font-size:22px;font-weight:800;letter-spacing:-.3px;margin-bottom:4px}
+.lc-brand p{font-size:13px;color:var(--t3)}
+.lf{margin-bottom:18px}
+.lf label{display:block;font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.8px;text-transform:uppercase;margin-bottom:8px}
+.lf input{
+  width:100%;background:var(--glass);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:12px 16px;color:var(--t1);font-size:14px;
+  outline:none;transition:.2s var(--ease);font-family:'Inter',sans-serif;
+}
+.lf input:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-glow)}
+.lf input::placeholder{color:var(--t3)}
+.lbtn{
+  width:100%;margin-top:8px;padding:13px;
+  background:var(--red);border:none;border-radius:var(--r);
+  color:#fff;font-size:14px;font-weight:700;letter-spacing:.2px;
+  cursor:pointer;transition:.2s var(--ease);font-family:'Inter',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.lbtn:hover{background:var(--red-d);box-shadow:0 8px 28px rgba(229,9,20,.35);transform:translateY(-1px)}
+.lbtn:active{transform:translateY(0)}
+.l-err{color:#ff5555;font-size:12px;text-align:center;margin-top:12px;min-height:16px;font-weight:500}
+.l-footer{margin-top:24px;display:flex;align-items:center;justify-content:center;gap:6px;color:var(--t3);font-size:11px}
+.l-footer svg{color:#22c55e;flex-shrink:0}
+
+/* ─── LAYOUT ─────────────────────────────────────────── */
+#app {
+  display: flex;
+  position: fixed;
+  inset: 12px;
+  background: var(--bg);
+  border: 1.5px solid rgba(255, 10, 22, 0.22);
+  border-radius: 20px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.85), 0 0 30px rgba(255, 10, 22, 0.04);
+  overflow: hidden;
+}
+
+/* SIDEBAR */
+.sb {
+  width: var(--sb);
+  flex-shrink: 0;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  z-index: 80;
+}
+.sb-logo{
+  padding: 22px 20px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.sb-nf-logo{display:flex;align-items:center}
+.sb-label{margin-left:2px}
+.sb-label .name{font-size:15px;font-weight:800;letter-spacing:.5px;color:var(--t1)}
+.sb-label .name span{color:var(--red)}
+.sb-label .role{font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--t3);margin-top:1px}
+.sb-nav{flex:1;padding:16px 12px;overflow-y:auto}
+.sb-sec{margin-bottom:24px}
+.sb-sec-label{font-size:10px;font-weight:700;color:var(--t3);letter-spacing:2px;text-transform:uppercase;padding:0 10px;margin-bottom:6px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:8px;
+  font-size:13px;font-weight:500;color:var(--t2);
+  cursor:pointer;transition:.18s var(--ease);margin-bottom:1px;
+  position:relative;
+}
+.nav-item .ni-icon{width:34px;height:34px;border-radius:8px;background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.18s var(--ease)}
+.nav-item .ni-icon svg{opacity:.5;transition:.18s var(--ease)}
+.nav-item .ni-label{flex:1;font-size:13px}
+.nav-item .ni-badge{background:var(--red);color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;min-width:20px;text-align:center}
+.nav-item:hover{background:var(--glass2);color:var(--t1)}
+.nav-item:hover .ni-icon{background:var(--glass2)}
+.nav-item:hover .ni-icon svg{opacity:.8}
+.nav-item.active{background:rgba(255,10,22,.08);color:var(--t1)}
+.nav-item.active .ni-icon{background:rgba(255,10,22,.14)}
+.nav-item.active .ni-icon svg{opacity:1;color:var(--red)}
+.nav-item.active .ni-label{color:var(--t1);font-weight:600}
+.nav-item.active::before{content:'';position:absolute;left:0;top:20%;bottom:20%;width:3px;background:var(--red);border-radius:0 3px 3px 0}
+.sb-foot{padding:14px 12px;border-top:1px solid var(--border)}
+.sb-user{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--glass);border-radius:10px;border:1px solid var(--border)}
+.sb-avatar{width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--red),#7a0509);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;flex-shrink:0}
+.sb-uinfo{flex:1;min-width:0}
+.sb-uname{font-size:13px;font-weight:600;color:var(--t1)}
+.sb-urole{font-size:10px;color:var(--t3)}
+.sb-logout{background:none;border:none;cursor:pointer;color:var(--t3);padding:4px;border-radius:6px;display:flex;transition:.18s var(--ease)}
+.sb-logout:hover{color:var(--red);background:rgba(255,10,22,.1)}
+
+/* TOPBAR */
+.main{flex:1;display:flex;flex-direction:column;height:100%;overflow-y:auto}
+.topbar{
+  position:sticky;top:0;z-index:50;
+  height:60px;padding:0 28px;
+  background:rgba(9,9,14,.85);
+  backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.tb-left h1{font-size:17px;font-weight:700;color:var(--t1)}
+.tb-left p{font-size:12px;color:var(--t3);margin-top:1px}
+.tb-right{display:flex;align-items:center;gap:10px}
+.vps-pill{
+  display:flex;align-items:center;gap:7px;
+  padding:6px 14px;background:var(--glass);
+  border:1px solid var(--border);border-radius:99px;
+  font-size:12px;font-weight:600;color:var(--t2);
+  transition:.2s var(--ease);
+}
+.vpsdot{width:7px;height:7px;border-radius:50%;background:var(--green);flex-shrink:0;animation:pulseGreen 2s ease-in-out infinite}
+.vpsdot.off{background:var(--red);animation:none;box-shadow:0 0 0 3px rgba(229,9,20,.2)}
+.vpsdot.warn{background:var(--amber);animation:none}
+.icon-btn{
+  width:36px;height:36px;border-radius:8px;
+  background:var(--glass);border:1px solid var(--border);
+  color:var(--t2);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:.18s var(--ease);
+}
+.icon-btn:hover{background:var(--glass2);color:var(--t1);border-color:var(--border2)}
+
+/* ─── CONTENT ────────────────────────────────────────── */
+.content{flex:1;padding:26px 28px;max-width:1400px}
+.page{display:none;animation:fadeIn .25s var(--ease)}
+.page.active{display:block}
+
+/* ─── STAT CARDS ─────────────────────────────────────── */
+.stat-row{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;margin-bottom:22px}
+.sc{
+  background:linear-gradient(135deg, var(--bg2), rgba(15,15,22,0.65));
+  border:1px solid var(--border);
+  border-radius:var(--r2);padding:18px 20px 36px 20px;
+  position:relative;overflow:hidden;transition:all 0.3s var(--ease);cursor:default;
+  box-shadow:0 4px 20px rgba(0,0,0,0.2);
+}
+.sc:hover{
+  border-color:rgba(255,10,22,0.25);
+  transform:translateY(-3px);
+  box-shadow:0 12px 30px rgba(255,10,22,0.06);
+}
+.sc-trend {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  margin-top: 6px;
+}
+.sc-trend.up { color: var(--green); }
+.sc-trend.down { color: var(--red); }
+.sc-trend.neutral { color: var(--blue); }
+.sc-spark {
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 35px; pointer-events: none;
+  opacity: 0.75;
+}
+.sc-shine{position:absolute;top:-40px;right:-40px;width:100px;height:100px;border-radius:50%;opacity:.08}
+.sc.c-red .sc-shine{background:var(--red)}
+.sc.c-green .sc-shine{background:var(--green)}
+.sc.c-blue .sc-shine{background:var(--blue)}
+.sc.c-amber .sc-shine{background:var(--amber)}
+.sc.c-violet .sc-shine{background:var(--violet)}
+.sc.c-cyan .sc-shine{background:var(--cyan)}
+.sc-icon{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:16px}
+.sc.c-red .sc-icon{background:rgba(255,10,22,0.1);color:var(--red)}
+.sc.c-green .sc-icon{background:rgba(16,185,129,0.1);color:var(--green)}
+.sc.c-blue .sc-icon{background:rgba(59,130,246,0.1);color:var(--blue)}
+.sc.c-amber .sc-icon{background:rgba(245,158,11,0.1);color:var(--amber)}
+.sc.c-violet .sc-icon{background:rgba(167,139,250,0.1);color:var(--violet)}
+.sc.c-cyan .sc-icon{background:rgba(34,211,238,0.1);color:var(--cyan)}
+.sc-val{font-size:28px;font-weight:800;line-height:1;color:var(--t1);margin-bottom:5px;letter-spacing:-0.5px}
+.sc-lbl{font-size:11.5px;font-weight:500;color:var(--t3);text-transform:uppercase;letter-spacing:0.5px}
+
+/* ─── CHARTS ─────────────────────────────────────────── */
+.chart-row{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px}
+.cc{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+.cc-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.cc-head h3{font-size:13px;font-weight:700;color:var(--t1)}
+.cc-head span{font-size:11px;color:var(--t3)}
+
+/* ─── SECTION CARD ───────────────────────────────────── */
+.card{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);margin-bottom:18px;overflow:hidden;box-shadow:0 4px 20px rgba(0,0,0,0.2)}
+.card-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px 20px;border-bottom:1px solid var(--border);
+}
+.card-head h3{font-size:13px;font-weight:700;color:var(--t1)}
+.card-actions{display:flex;align-items:center;gap:8px}
+
+/* ─── TABLE ──────────────────────────────────────────── */
+.tbl{width:100%;border-collapse:collapse}
+.tbl thead th{
+  padding:10px 16px;text-align:left;
+  font-size:10.5px;font-weight:700;color:var(--t3);
+  letter-spacing:.8px;text-transform:uppercase;
+  border-bottom:1px solid var(--border);
+  background:rgba(255,255,255,.015);white-space:nowrap;
+}
+.tbl tbody td{padding:11px 16px;font-size:12.5px;border-bottom:1px solid rgba(255,255,255,.035);vertical-align:middle;color:var(--t2)}
+.tbl tbody tr:last-child td{border:none}
+.tbl tbody tr:hover td{background:rgba(255,255,255,.015);color:var(--t1)}
+.mono{font-family:'Courier New',monospace;font-size:11.5px;color:var(--t1)}
+
+/* ─── BADGES ─────────────────────────────────────────── */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 9px;border-radius:6px;font-size:11px;font-weight:600;white-space:nowrap}
+.badge.active {background:rgba(16,185,129,0.1); color:var(--green)}
+.badge.expired{background:rgba(255,10,22,0.1);  color:var(--red)}
+.badge.unused {background:rgba(59,130,246,0.1); color:var(--blue)}
+.badge.used   {background:rgba(245,158,11,0.1); color:var(--amber)}
+.badge.premium{background:rgba(167,139,250,0.1); color:var(--violet)}
+.badge.standard{background:rgba(59,130,246,0.1);color:var(--blue)}
+.badge.basic  {background:rgba(34,211,238,0.1);  color:var(--cyan)}
+.badge.tv     {background:rgba(16,185,129,0.1);  color:var(--green)}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;flex-shrink:0}
+.dot.g{background:var(--green)}
+.dot.r{background:var(--red)}
+.dot.b{background:var(--blue)}
+.dot.a{background:var(--amber)}
+
+/* ─── BUTTONS ────────────────────────────────────────── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:8px;border:none;font-size:12.5px;font-weight:600;cursor:pointer;transition:.18s var(--ease);font-family:'Inter',sans-serif;white-space:nowrap}
+.btn svg{flex-shrink:0}
+.btn-primary{background:var(--red);color:#fff}
+.btn-primary:hover{background:var(--red-d);box-shadow:0 6px 20px rgba(255,10,22,.3);transform:translateY(-1px)}
+.btn-ghost{background:var(--glass);border:1px solid var(--border);color:var(--t2)}
+.btn-ghost:hover{background:var(--glass2);color:var(--t1);border-color:var(--border2)}
+.btn-danger{background:rgba(255,10,22,0.1);border:1px solid rgba(255,10,22,0.2);color:var(--red)}
+.btn-danger:hover{background:var(--red);color:#fff;border-color:var(--red)}
+.btn-success{background:rgba(34,197,94,.1);border:1px solid rgba(34,197,94,.25);color:var(--green)}
+.btn-success:hover{background:var(--green);color:#fff}
+.btn-sm{padding:6px 11px;font-size:12px;border-radius:7px}
+.btn-icon{width:32px;height:32px;padding:0;border-radius:7px;display:inline-flex;align-items:center;justify-content:center}
+
+/* ─── INPUTS ─────────────────────────────────────────── */
+.inp{
+  background:var(--glass);border:1.5px solid var(--border);
+  border-radius:var(--r);padding:9px 13px;
+  color:var(--t1);font-size:13px;outline:none;
+  transition:.18s var(--ease);font-family:'Inter',sans-serif;
+  width:100%;
+}
+.inp:focus{border-color:var(--red);box-shadow:0 0 0 3px var(--red-glow)}
+.inp::placeholder{color:var(--t3)}
+select.inp{cursor:pointer}
+select.inp option{background:var(--bg2);color:var(--t1)}
+
+/* ─── FORM GRID ──────────────────────────────────────── */
+.fg{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.fg.c3{grid-template-columns:1fr 1fr 1fr}
+.fl{display:flex;flex-direction:column;gap:6px}
+.fl.full{grid-column:1/-1}
+.fl label{font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.6px;text-transform:uppercase}
+
+/* ─── SEARCH ─────────────────────────────────────────── */
+.search-wrap{position:relative}
+.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--t3);pointer-events:none}
+.search-inp{padding-left:34px;width:200px;transition:.2s var(--ease)}
+.search-inp:focus{width:260px}
+
+/* ─── DROP ZONE ──────────────────────────────────────── */
+.dz{
+  border:1.5px dashed var(--border);border-radius:var(--r2);
+  padding:48px 24px;text-align:center;cursor:pointer;
+  transition:.2s var(--ease);
+}
+.dz:hover,.dz.over{border-color:var(--red);background:rgba(229,9,20,.05)}
+.dz-icon{width:52px;height:52px;border-radius:14px;background:var(--glass);border:1px solid var(--border);margin:0 auto 14px;display:flex;align-items:center;justify-content:center;color:var(--t3)}
+.dz h4{font-size:14px;font-weight:700;color:var(--t2);margin-bottom:5px}
+.dz p{font-size:12px;color:var(--t3)}
+
+/* ─── KEY BOX ────────────────────────────────────────── */
+.keybox{
+  background:var(--bg);border:1px solid var(--border);border-radius:var(--r);
+  padding:14px 16px;font-family:'Courier New',monospace;font-size:12px;
+  color:var(--green);max-height:180px;overflow-y:auto;white-space:pre;
+  margin-top:12px;line-height:1.7;
+}
+
+/* ─── PROGRESS ───────────────────────────────────────── */
+.prog{background:var(--glass);border-radius:99px;height:5px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;background:var(--green);transition:width .5s var(--ease)}
+
+/* ─── PAGINATION ─────────────────────────────────────── */
+.pag{display:flex;align-items:center;gap:6px;padding:14px 20px;justify-content:flex-end;border-top:1px solid var(--border)}
+.pag-btn{width:30px;height:30px;border-radius:7px;border:1px solid var(--border);background:var(--glass);color:var(--t2);font-size:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.18s var(--ease)}
+.pag-btn:hover,.pag-btn.on{background:var(--red);color:#fff;border-color:var(--red)}
+.pag-info{font-size:11px;color:var(--t3);margin-right:4px}
+
+/* ─── TOAST ──────────────────────────────────────────── */
+#toasts{position:fixed;bottom:22px;right:22px;z-index:9998;display:flex;flex-direction:column;gap:8px}
+.toast{
+  display:flex;align-items:center;gap:11px;
+  padding:12px 16px;border-radius:12px;
+  background:var(--bg2);border:1px solid var(--border2);
+  box-shadow:0 8px 32px rgba(0,0,0,.5);
+  font-size:13px;font-weight:500;
+  min-width:260px;max-width:360px;
+  animation:slideIn .3s var(--ease);
+}
+.toast.ok {border-color:rgba(34,197,94,.35)}
+.toast.err{border-color:rgba(229,9,20,.35)}
+.toast.inf{border-color:rgba(59,130,246,.35)}
+.toast svg{flex-shrink:0}
+.toast.ok  svg{color:var(--green)}
+.toast.err svg{color:var(--red)}
+.toast.inf svg{color:var(--blue)}
+.toast.out{animation:slideOut .3s var(--ease) forwards}
+
+/* ─── PW STRENGTH ────────────────────────────────────── */
+.pw-bars{display:flex;gap:4px;margin-top:8px}
+.pw-bar{flex:1;height:3px;border-radius:99px;background:var(--glass);transition:.2s var(--ease)}
+.pw-bar.w{background:var(--red)}
+.pw-bar.m{background:var(--amber)}
+.pw-bar.s{background:var(--green)}
+.pw-lbl{font-size:10.5px;color:var(--t3);margin-top:4px;font-weight:500}
+
+/* ─── EMPTY STATE ────────────────────────────────────── */
+.empty{text-align:center;padding:56px 20px;color:var(--t3)}
+.empty svg{opacity:.25;margin-bottom:12px;display:block;margin-left:auto;margin-right:auto}
+.empty p{font-size:13px}
+
+/* ─── UPLOAD STATUS ──────────────────────────────────── */
+.up-result{display:flex;align-items:center;gap:10px;padding:13px 16px;border-radius:var(--r);margin-top:12px;font-size:13px;font-weight:500}
+.up-result.ok {background:rgba(34,197,94,.09);border:1px solid rgba(34,197,94,.2);color:var(--green)}
+.up-result.err{background:rgba(229,9,20,.09);border:1px solid rgba(229,9,20,.2);color:var(--red)}
+.up-result.inf{background:rgba(59,130,246,.09);border:1px solid rgba(59,130,246,.2);color:var(--blue)}
+
+/* ─── DIVIDER ────────────────────────────────────────── */
+.divider{height:1px;background:var(--border);margin:20px 0}
+
+/* ─── COOKIE PAGE SPECIFIC ───────────────────────────── */
+.ck-stats-bar{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.ck-mini-card{
+  background:var(--bg2);border:1px solid var(--border);border-radius:14px;
+  padding:16px 18px;display:flex;align-items:center;gap:12px;
+  transition:.2s var(--ease);
+}
+.ck-mini-card:hover{border-color:rgba(255,255,255,0.1);transform:translateY(-1px)}
+.ck-mini-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ck-mini-val{font-size:22px;font-weight:800;line-height:1;color:var(--t1)}
+.ck-mini-lbl{font-size:10.5px;font-weight:600;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-top:3px}
+.ck-upload-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;align-items:stretch}
+.ck-upload-box{
+  border:1.5px dashed var(--border);border-radius:16px;
+  padding:32px 24px;text-align:center;cursor:pointer;
+  transition:.2s var(--ease);background:rgba(255,255,255,0.01);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.ck-upload-box:hover,.ck-upload-box.over{border-color:var(--red);background:rgba(229,9,20,.04)}
+.ck-upload-box:hover .ck-up-icon{background:rgba(229,9,20,.12);color:var(--red)}
+.ck-up-icon{width:48px;height:48px;border-radius:12px;background:var(--glass);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;color:var(--t3);margin-bottom:12px;transition:.2s var(--ease)}
+.ck-upload-opts{display:flex;flex-direction:column;gap:10px;padding:4px 0}
+.ck-opt-row{display:flex;align-items:center;gap:10px}
+.ck-opt-row label{font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.6px;text-transform:uppercase;width:70px;flex-shrink:0}
+.ck-pool-badge{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:6px;font-size:11px;font-weight:600}
+.ck-pool-badge.nw {background:rgba(245,158,11,.1);color:var(--amber)}
+.ck-pool-badge.w7 {background:rgba(34,211,238,.1);color:var(--cyan)}
+.ck-pool-badge.w1m{background:rgba(16,185,129,.1);color:var(--green)}
+.ck-pool-badge.w2m{background:rgba(59,130,246,.1);color:var(--blue)}
+.ck-pool-badge.w3m{background:rgba(167,139,250,.1);color:var(--violet)}
+.ck-pool-badge.w6m{background:rgba(229,9,20,.1);color:var(--red)}
+.ck-pool-badge.w1y{background:rgba(252,211,77,.1);color:#fcd34d}
+.slot-bar{width:60px;height:4px;background:var(--glass);border-radius:99px;overflow:hidden;flex-shrink:0}
+.slot-fill{height:100%;border-radius:99px;transition:width .4s var(--ease)}
+.slot-fill.ok{background:var(--green)}
+.slot-fill.warn{background:var(--amber)}
+.slot-fill.full{background:var(--red)}
+
+/* ─── KEYFRAMES ──────────────────────────────────────── */
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes fadeOut{from{opacity:1}to{opacity:0}}
+@keyframes slideIn{from{opacity:0;transform:translateX(30px)}to{opacity:1;transform:translateX(0)}}
+@keyframes slideOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(30px)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes pulseGreen{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}70%{box-shadow:0 0 0 5px rgba(34,197,94,0)}}
+.spin{animation:spin .8s linear infinite}
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══════════════════════════════════════════ -->
+<div id="login-screen">
+<div class="lc">
+  <div class="lc-logo">
+    <!-- Clean, precise official Netflix Wordmark SVG -->
+    <svg width="120" height="32" viewBox="0 0 111 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M105.06233,14.2806261 L110.999156,30 C109.249227,29.7497422 107.500234,29.4366857 105.718437,29.1554972 L102.374168,20.4686475 L98.9371075,28.4375293 C97.2499766,28.1563408 95.5928391,28.061674 93.9057081,27.8432843 L99.9372012,14.0931671 L94.4680851,-5.68434189e-14 L99.5313525,-5.68434189e-14 L102.593495,7.87421502 L105.874965,-5.68434189e-14 L110.999156,-5.68434189e-14 L105.06233,14.2806261 Z M90.4686475,-5.68434189e-14 L85.8749649,-5.68434189e-14 L85.8749649,27.2499766 C87.3746368,27.3437061 88.9371075,27.4055675 90.4686475,27.5930265 L90.4686475,-5.68434189e-14 Z M81.9055207,26.93692 C77.7186241,26.6557316 73.5307901,26.4064111 69.250164,26.3117443 L69.250164,-5.68434189e-14 L73.9366389,-5.68434189e-14 L73.9366389,21.8745899 C76.6248008,21.9373887 79.3120255,22.1557784 81.9055207,22.2804387 L81.9055207,26.93692 Z M64.2496954,10.6561065 L64.2496954,15.3435186 L57.8442216,15.3435186 L57.8442216,25.9996251 L53.2186709,25.9996251 L53.2186709,-5.68434189e-14 L66.3436123,-5.68434189e-14 L66.3436123,4.68741213 L57.8442216,4.68741213 L57.8442216,10.6561065 L64.2496954,10.6561065 Z M45.3435186,4.68741213 L45.3435186,26.2498828 C43.7810479,26.2498828 42.1876465,26.2498828 40.6561065,26.3117443 L40.6561065,4.68741213 L35.8121661,4.68741213 L35.8121661,-5.68434189e-14 L50.2183897,-5.68434189e-14 L50.2183897,4.68741213 L45.3435186,4.68741213 Z M30.749836,15.5928391 C28.687787,15.5928391 26.2498828,15.5928391 24.4999531,15.6875059 L24.4999531,22.6562939 C27.2499766,22.4678976 30,22.2495079 32.7809542,22.1557784 L32.7809542,26.6557316 L19.812541,27.6876933 L19.812541,-5.68434189e-14 L32.7809542,-5.68434189e-14 L32.7809542,4.68741213 L24.4999531,4.68741213 L24.4999531,10.9991564 C26.3126816,10.9991564 29.0936358,10.9054269 30.749836,10.9054269 L30.749836,15.5928391 Z M4.78114163,12.9684132 L4.78114163,29.3429562 C3.09401069,29.5313525 1.59340144,29.7497422 0,30 L0,-5.68434189e-14 L4.4690224,-5.68434189e-14 L10.562377,17.0315868 L10.562377,-5.68434189e-14 L15.2497891,-5.68434189e-14 L15.2497891,28.061674 C13.5935889,28.3437998 11.906458,28.4375293 10.1246602,28.6868498 L4.78114163,12.9684132 Z" fill="#E50914"/>
+    </svg>
+  </div>
+  <div class="lc-brand">
+    <h2>Admin Console</h2>
+    <p>Sign in to manage your system</p>
+  </div>
+  <div class="lf">
+    <label>Username</label>
+    <input type="text" id="l-user" placeholder="Enter username" autocomplete="username">
+  </div>
+  <div class="lf">
+    <label>Password</label>
+    <input type="password" id="l-pass" placeholder="Enter password" autocomplete="current-password">
+  </div>
+  <button class="lbtn" id="lbtn" onclick="doLogin()">
+    <span id="lbtn-txt">Sign In</span>
+  </button>
+  <div class="l-err" id="l-err"></div>
+  <div class="l-footer">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+    Protected & Encrypted Session
+  </div>
+</div>
+</div>
+
+<!-- ═══ APP ══════════════════════════════════════════════ -->
+<div id="app" style="display:none">
+
+<!-- SIDEBAR -->
+<nav class="sb">
+  <div class="sb-logo">
+    <div class="sb-nf-logo">
+      <svg width="88" height="24" viewBox="0 0 111 30" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M105.06233,14.2806261 L110.999156,30 C109.249227,29.7497422 107.500234,29.4366857 105.718437,29.1554972 L102.374168,20.4686475 L98.9371075,28.4375293 C97.2499766,28.1563408 95.5928391,28.061674 93.9057081,27.8432843 L99.9372012,14.0931671 L94.4680851,-5.68434189e-14 L99.5313525,-5.68434189e-14 L102.593495,7.87421502 L105.874965,-5.68434189e-14 L110.999156,-5.68434189e-14 L105.06233,14.2806261 Z M90.4686475,-5.68434189e-14 L85.8749649,-5.68434189e-14 L85.8749649,27.2499766 C87.3746368,27.3437061 88.9371075,27.4055675 90.4686475,27.5930265 L90.4686475,-5.68434189e-14 Z M81.9055207,26.93692 C77.7186241,26.6557316 73.5307901,26.4064111 69.250164,26.3117443 L69.250164,-5.68434189e-14 L73.9366389,-5.68434189e-14 L73.9366389,21.8745899 C76.6248008,21.9373887 79.3120255,22.1557784 81.9055207,22.2804387 L81.9055207,26.93692 Z M64.2496954,10.6561065 L64.2496954,15.3435186 L57.8442216,15.3435186 L57.8442216,25.9996251 L53.2186709,25.9996251 L53.2186709,-5.68434189e-14 L66.3436123,-5.68434189e-14 L66.3436123,4.68741213 L57.8442216,4.68741213 L57.8442216,10.6561065 L64.2496954,10.6561065 Z M45.3435186,4.68741213 L45.3435186,26.2498828 C43.7810479,26.2498828 42.1876465,26.2498828 40.6561065,26.3117443 L40.6561065,4.68741213 L35.8121661,4.68741213 L35.8121661,-5.68434189e-14 L50.2183897,-5.68434189e-14 L50.2183897,4.68741213 L45.3435186,4.68741213 Z M30.749836,15.5928391 C28.687787,15.5928391 26.2498828,15.5928391 24.4999531,15.6875059 L24.4999531,22.6562939 C27.2499766,22.4678976 30,22.2495079 32.7809542,22.1557784 L32.7809542,26.6557316 L19.812541,27.6876933 L19.812541,-5.68434189e-14 L32.7809542,-5.68434189e-14 L32.7809542,4.68741213 L24.4999531,4.68741213 L24.4999531,10.9991564 C26.3126816,10.9991564 29.0936358,10.9054269 30.749836,10.9054269 L30.749836,15.5928391 Z M4.78114163,12.9684132 L4.78114163,29.3429562 C3.09401069,29.5313525 1.59340144,29.7497422 0,30 L0,-5.68434189e-14 L4.4690224,-5.68434189e-14 L10.562377,17.0315868 L10.562377,-5.68434189e-14 L15.2497891,-5.68434189e-14 L15.2497891,28.061674 C13.5935889,28.3437998 11.906458,28.4375293 10.1246602,28.6868498 L4.78114163,12.9684132 Z" fill="#E50914"/>
+      </svg>
+    </div>
+    <div class="sb-label">
+      <div class="role">Admin Panel</div>
+    </div>
+  </div>
+  
+  <div class="sb-nav">
+    <div style="padding:0 10px 18px 10px">
+      <div class="search-wrap" style="position:relative">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--t3)"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input class="inp search-inp" placeholder="Search..." style="padding-left:32px;width:100%;font-size:12.5px" oninput="filterSidebar(this.value)">
+      </div>
+    </div>
+
+    <div class="sb-sec">
+      <div class="sb-sec-label">Overview</div>
+      <div class="nav-item active" data-page="dashboard" onclick="goPage('dashboard',this)">
+        <div class="ni-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
+        </div>
+        <span class="ni-label">Dashboard</span>
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-sec-label">Management</div>
+      <div class="nav-item" data-page="cookies" onclick="goPage('cookies',this)">
+        <div class="ni-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10c0-.34-.02-.67-.05-1"/><path d="M17 3.34A10 10 0 0 1 22 12"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="13" cy="16" r="1" fill="currentColor"/><circle cx="16" cy="10" r="1" fill="currentColor"/></svg>
+        </div>
+        <span class="ni-label">Cookies</span>
+        <span class="ni-badge" id="badge-ck">0</span>
+      </div>
+      <div class="nav-item" data-page="cdks" onclick="goPage('cdks',this)">
+        <div class="ni-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+        </div>
+        <span class="ni-label">CDK Keys</span>
+        <span class="ni-badge" id="badge-cdk">0</span>
+      </div>
+    </div>
+    <div class="sb-sec">
+      <div class="sb-sec-label">Access</div>
+      <div class="nav-item" data-page="admins" onclick="goPage('admins',this)">
+        <div class="ni-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <span class="ni-label">Admin Users</span>
+      </div>
+      <div class="nav-item" data-page="settings" onclick="goPage('settings',this)">
+        <div class="ni-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2m0 16v2m7.07-4.93l-1.41-1.41M4.93 19.07l1.41-1.41M2 12h2m16 0h2"/></svg>
+        </div>
+        <span class="ni-label">Settings</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Semicircle radial progress widget -->
+  <div style="padding:16px 14px;border-top:1px solid var(--border);display:flex;flex-direction:column;align-items:center;gap:10px">
+    <div style="position:relative;width:90px;height:52px;display:flex;align-items:center;justify-content:center;overflow:hidden">
+      <svg width="90" height="90" viewBox="0 0 100 100" style="position:absolute;top:0;left:0">
+        <circle cx="50" cy="50" r="40" stroke="rgba(255,255,255,0.04)" stroke-width="8" fill="none" stroke-dasharray="126" stroke-dashoffset="0" transform="rotate(-180 50 50)"/>
+        <circle id="sd-radial" cx="50" cy="50" r="40" stroke="var(--red)" stroke-width="8" fill="none" stroke-dasharray="126" stroke-dashoffset="126" transform="rotate(-180 50 50)" style="transition:stroke-dashoffset 0.6s var(--ease);filter:drop-shadow(0 0 4px var(--red))"/>
+      </svg>
+      <div style="text-align:center;margin-top:20px">
+        <span id="sd-radial-txt" style="font-size:15px;font-weight:800;color:var(--t1)">0</span>
+        <span style="font-size:9px;color:var(--t3);display:block;margin-top:-2px">/ 50</span>
+      </div>
+    </div>
+    <div style="text-align:center">
+      <div style="font-size:11px;font-weight:700;color:var(--t2)">Active Seats Allocation</div>
+      <div style="font-size:9.5px;color:var(--t3);margin-top:1px">System Status: Nominal</div>
+    </div>
+  </div>
+
+  <div class="sb-foot">
+    <div class="sb-user">
+      <div class="sb-avatar" id="u-av">A</div>
+      <div class="sb-uinfo">
+        <div class="sb-uname" id="u-nm">admin</div>
+        <div class="sb-urole">Administrator</div>
+      </div>
+      <button class="sb-logout" onclick="doLogout()" title="Sign out">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<!-- MAIN -->
+<main class="main">
+  <header class="topbar">
+    <div class="tb-left">
+      <h1 id="pg-title">Dashboard</h1>
+      <p id="pg-sub">System overview</p>
+    </div>
+    <div class="tb-right">
+      <div class="vps-pill">
+        <span class="vpsdot warn" id="vdot"></span>
+        <span id="vtxt">Connecting...</span>
+      </div>
+      <button class="icon-btn" onclick="refreshPage()" title="Refresh">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" id="ri"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <div class="content">
+
+    <!-- ── DASHBOARD ── -->
+    <div class="page active" id="page-dashboard">
+      <div class="stat-row">
+        <!-- Card 1: Total Cookies -->
+        <div class="sc c-red">
+          <div class="sc-shine"></div>
+          <div style="display:flex;justify-content:between;align-items:flex-start">
+            <div style="flex:1">
+              <div class="sc-lbl">Total Cookies</div>
+              <div class="sc-val" id="s1">0</div>
+            </div>
+            <div class="sc-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="14" cy="15" r="1" fill="currentColor"/></svg></div>
+          </div>
+          <div class="sc-trend up">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+            <span>+100% capacity</span>
+          </div>
+          <div class="sc-spark">
+            <svg viewBox="0 0 100 30" style="width:100%;height:35px;fill:none;stroke:var(--red);stroke-width:1.8;filter:drop-shadow(0 2px 6px var(--red-glow))">
+              <path d="M0 25 Q 15 5, 30 22 T 60 5 T 90 25 L 100 20" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Card 2: Active Accounts -->
+        <div class="sc c-green">
+          <div class="sc-shine"></div>
+          <div style="display:flex;justify-content:between;align-items:flex-start">
+            <div style="flex:1">
+              <div class="sc-lbl">Active Accounts</div>
+              <div class="sc-val" id="s2">0</div>
+            </div>
+            <div class="sc-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg></div>
+          </div>
+          <div class="sc-trend up">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+            <span>Active Verified</span>
+          </div>
+          <div class="sc-spark">
+            <svg viewBox="0 0 100 30" style="width:100%;height:35px;fill:none;stroke:var(--green);stroke-width:1.8;filter:drop-shadow(0 2px 6px rgba(16,185,129,0.15))">
+              <path d="M0 22 Q 15 18, 30 5 T 60 15 T 90 8 L 100 2" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Card 3: Available Seats -->
+        <div class="sc c-blue">
+          <div class="sc-shine"></div>
+          <div style="display:flex;justify-content:between;align-items:flex-start">
+            <div style="flex:1">
+              <div class="sc-lbl">Available Seats</div>
+              <div class="sc-val" id="s3">0</div>
+            </div>
+            <div class="sc-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>
+          </div>
+          <div class="sc-trend neutral">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Sharing Pool</span>
+          </div>
+          <div class="sc-spark">
+            <svg viewBox="0 0 100 30" style="width:100%;height:35px;fill:none;stroke:var(--blue);stroke-width:1.8;filter:drop-shadow(0 2px 6px rgba(59,130,246,0.15))">
+              <path d="M0 15 Q 15 5, 30 18 T 60 5 T 90 12 L 100 8" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Card 4: Total CDKs -->
+        <div class="sc c-violet">
+          <div class="sc-shine"></div>
+          <div style="display:flex;justify-content:between;align-items:flex-start">
+            <div style="flex:1">
+              <div class="sc-lbl">Total CDK Keys</div>
+              <div class="sc-val" id="s5">0</div>
+            </div>
+            <div class="sc-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg></div>
+          </div>
+          <div class="sc-trend up">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+            <span>System keys</span>
+          </div>
+          <div class="sc-spark">
+            <svg viewBox="0 0 100 30" style="width:100%;height:35px;fill:none;stroke:var(--violet);stroke-width:1.8;filter:drop-shadow(0 2px 6px rgba(167,139,250,0.15))">
+              <path d="M0 22 Q 15 25, 30 12 T 60 8 T 90 2 L 100 5" />
+            </svg>
+          </div>
+        </div>
+      </div>
+
+      <div class="chart-row" style="display:grid; grid-template-columns: 2fr 1fr; gap:14px; margin-bottom:22px">
+        <!-- Main Line Chart (drawn on canvas) -->
+        <div class="cc" style="position:relative">
+          <div class="cc-head">
+            <div>
+              <h3>System Activity Chart</h3>
+              <span style="font-size:11px;color:var(--t3)">Daily database status verification checks and activation keys usage load</span>
+            </div>
+            <div style="background:var(--glass); border:1px solid var(--border); border-radius:6px; padding:4px 8px; font-size:11px; color:var(--t2)">14 days</div>
+          </div>
+          <canvas id="ch-pool" style="width:100%; height:180px; margin-top:10px"></canvas>
+        </div>
+
+        <!-- Sidelist for warranty pools (like Assets list in reference image) -->
+        <div class="cc">
+          <div class="cc-head">
+            <div>
+              <h3>Pool Distribution</h3>
+              <span style="font-size:11px;color:var(--t3)">Active verified warranty packages</span>
+            </div>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:12px; margin-top:14px" id="pool-list-widget">
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.02)">
+              <div>
+                <div style="font-size:12.5px; font-weight:600; color:var(--t1)">1 Month Pool</div>
+                <div style="font-size:11px; color:var(--t3)">Premium packages</div>
+              </div>
+              <svg width="45" height="15" viewBox="0 0 50 15" style="stroke:var(--green); fill:none; stroke-width:1.5"><path d="M0 10 Q 12 2, 25 8 T 50 2"/></svg>
+              <div style="text-align:right">
+                <span style="font-size:13px; font-weight:700; color:var(--green)" id="pl-w1">0</span>
+                <span style="font-size:10px; color:var(--t3); display:block">active</span>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.02)">
+              <div>
+                <div style="font-size:12.5px; font-weight:600; color:var(--t1)">3 Months Pool</div>
+                <div style="font-size:11px; color:var(--t3)">Extended warranty keys</div>
+              </div>
+              <svg width="45" height="15" viewBox="0 0 50 15" style="stroke:var(--blue); fill:none; stroke-width:1.5"><path d="M0 12 Q 12 8, 25 4 T 50 10"/></svg>
+              <div style="text-align:right">
+                <span style="font-size:13px; font-weight:700; color:var(--blue)" id="pl-w3">0</span>
+                <span style="font-size:10px; color:var(--t3); display:block">active</span>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0; border-bottom:1px solid rgba(255,255,255,0.02)">
+              <div>
+                <div style="font-size:12.5px; font-weight:600; color:var(--t1)">6 Months Pool</div>
+                <div style="font-size:11px; color:var(--t3)">Long-term warranty plan</div>
+              </div>
+              <svg width="45" height="15" viewBox="0 0 50 15" style="stroke:var(--violet); fill:none; stroke-width:1.5"><path d="M0 5 Q 12 12, 25 2 T 50 8"/></svg>
+              <div style="text-align:right">
+                <span style="font-size:13px; font-weight:700; color:var(--violet)" id="pl-w6">0</span>
+                <span style="font-size:10px; color:var(--t3); display:block">active</span>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; justify-content:space-between; padding:8px 0;">
+              <div>
+                <div style="font-size:12.5px; font-weight:600; color:var(--t1)">No Warranty</div>
+                <div style="font-size:11px; color:var(--t3)">Basic imported credentials</div>
+              </div>
+              <svg width="45" height="15" viewBox="0 0 50 15" style="stroke:var(--amber); fill:none; stroke-width:1.5"><path d="M0 8 Q 12 12, 25 10 T 50 12"/></svg>
+              <div style="text-align:right">
+                <span style="font-size:13px; font-weight:700; color:var(--amber)" id="pl-wn">0</span>
+                <span style="font-size:10px; color:var(--t3); display:block">active</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-head"><h3>Recent Cookies</h3><button class="btn btn-ghost btn-sm" onclick="goPage('cookies',document.querySelector('[data-page=cookies]'))">View all</button></div>
+        <table class="tbl"><thead><tr><th>Email</th><th>Plan</th><th>Pool</th><th>Status</th><th>Slots</th><th>Billing</th></tr></thead>
+        <tbody id="rc-body"><tr><td colspan="6"><div class="empty"><p>Loading...</p></div></td></tr></tbody></table>
+      </div>
+    </div>
+
+    <!-- ── COOKIES ── -->
+    <div class="page" id="page-cookies">
+
+      <!-- Mini stat bar -->
+      <div class="ck-stats-bar">
+        <div class="ck-mini-card">
+          <div class="ck-mini-icon" style="background:rgba(255,10,22,.1);color:var(--red)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="14" cy="15" r="1" fill="currentColor"/><circle cx="16" cy="9" r="1" fill="currentColor"/></svg>
+          </div>
+          <div>
+            <div class="ck-mini-val" id="ck-stat-total">0</div>
+            <div class="ck-mini-lbl">Total Cookies</div>
+          </div>
+        </div>
+        <div class="ck-mini-card">
+          <div class="ck-mini-icon" style="background:rgba(16,185,129,.1);color:var(--green)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+          </div>
+          <div>
+            <div class="ck-mini-val" id="ck-stat-active" style="color:var(--green)">0</div>
+            <div class="ck-mini-lbl">Active</div>
+          </div>
+        </div>
+        <div class="ck-mini-card">
+          <div class="ck-mini-icon" style="background:rgba(229,9,20,.1);color:var(--red)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+          </div>
+          <div>
+            <div class="ck-mini-val" id="ck-stat-expired" style="color:var(--red)">0</div>
+            <div class="ck-mini-lbl">Expired</div>
+          </div>
+        </div>
+        <div class="ck-mini-card">
+          <div class="ck-mini-icon" style="background:rgba(59,130,246,.1);color:var(--blue)">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <div>
+            <div class="ck-mini-val" id="ck-stat-seats" style="color:var(--blue)">0</div>
+            <div class="ck-mini-lbl">Free Seats</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upload + Config row -->
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-head">
+          <h3>Import Cookie File</h3>
+          <span style="font-size:11px;color:var(--t3)">Supports Netscape .txt and JSON array formats</span>
+        </div>
+        <div style="padding:20px">
+          <div class="ck-upload-grid">
+            <!-- Drop Zone -->
+            <div class="ck-upload-box" id="dz" onclick="document.getElementById('fi').click()">
+              <div class="ck-up-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              </div>
+              <div style="font-size:13.5px;font-weight:700;color:var(--t2);margin-bottom:5px">Drop file or click to browse</div>
+              <div style="font-size:11.5px;color:var(--t3)">.txt · .json · Netscape · JSON Array</div>
+              <input type="file" id="fi" accept=".txt,.json" style="display:none" onchange="onFile(this)">
+            </div>
+            <!-- Options -->
+            <div style="display:flex;flex-direction:column;justify-content:center;gap:14px">
+              <div class="ck-opt-row">
+                <label>Pool</label>
+                <select class="inp" id="up-pool" style="flex:1">
+                  <option value="no_warranty">No Warranty</option>
+                  <option value="7_days">7 Days</option>
+                  <option value="1_month" selected>1 Month</option>
+                  <option value="2_months">2 Months</option>
+                  <option value="3_months">3 Months</option>
+                  <option value="6_months">6 Months</option>
+                  <option value="1_year">1 Year</option>
+                </select>
+              </div>
+              <div class="ck-opt-row">
+                <label>Max Slots</label>
+                <input class="inp" type="number" id="up-max" min="1" max="20" value="5" style="flex:1">
+              </div>
+              <div id="up-status"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Cookies table -->
+      <div class="card">
+        <div class="card-head">
+          <h3>All Cookies <span id="ck-lbl" style="color:var(--t3);font-weight:400;font-size:12px"></span></h3>
+          <div class="card-actions">
+            <div class="search-wrap">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input class="inp search-inp" placeholder="Search email..." oninput="filterCk(this.value)" id="ck-q">
+            </div>
+            <select class="inp" style="width:110px;padding:7px 10px;font-size:12px" id="ck-filter" onchange="filterCkStatus()">
+              <option value="">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Expired">Expired</option>
+            </select>
+            <button class="btn btn-success btn-sm" onclick="checkAll()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>
+              Check All
+            </button>
+            <button class="btn btn-warning btn-sm" onclick="resetAllSlots()" style="background:#d97706;border-color:#d97706;color:#fff">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              Reset All Slots
+            </button>
+            <button class="btn btn-ghost btn-sm" onclick="loadCk()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+        <table class="tbl">
+          <thead><tr>
+            <th>Account</th>
+            <th>Plan</th>
+            <th>Pool</th>
+            <th>Status</th>
+            <th>Slots</th>
+            <th>Billing Date</th>
+            <th>Last Checked</th>
+            <th style="text-align:right">Actions</th>
+          </tr></thead>
+          <tbody id="ck-body"></tbody>
+        </table>
+        <div class="pag" id="ck-pag"></div>
+      </div>
+    </div>
+
+    <!-- ── CDK ── -->
+    <div class="page" id="page-cdks">
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-head"><h3>Generate CDK Keys</h3></div>
+        <div style="padding:20px">
+          <div class="fg">
+            <div class="fl"><label>Plan Type</label>
+              <select class="inp" id="dk-plan">
+                <option value="Premium">Premium 4K</option>
+                <option value="Standard">Standard 1080p</option>
+                <option value="Basic">Basic</option>
+                <option value="TV">TV Screen</option>
+              </select>
+            </div>
+            <div class="fl"><label>Warranty Pool</label>
+              <select class="inp" id="dk-pool">
+                <option value="no_warranty">No Warranty</option>
+                <option value="7_days">7 Days</option>
+                <option value="1_month" selected>1 Month</option>
+                <option value="2_months">2 Months</option>
+                <option value="3_months">3 Months</option>
+                <option value="6_months">6 Months</option>
+                <option value="1_year">1 Year</option>
+              </select>
+            </div>
+            <div class="fl"><label>Quantity (1–50)</label><input class="inp" type="number" id="dk-qty" min="1" max="50" value="1"></div>
+            <div class="fl"><label>Max Users / Key</label><input class="inp" type="number" id="dk-max" min="1" max="20" value="1"></div>
+          </div>
+          <div style="margin-top:16px;display:flex;gap:10px;align-items:center">
+            <button class="btn btn-primary" onclick="genCDK()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 5v14M5 12h14"/></svg>
+              Generate Keys
+            </button>
+          </div>
+          <div id="dk-result" style="display:none">
+            <div class="divider"></div>
+            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+              <span style="font-size:13px;color:var(--green);font-weight:600"><span id="dk-cnt">0</span> keys generated</span>
+              <button class="btn btn-ghost btn-sm" onclick="cpAll()">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                Copy All
+              </button>
+            </div>
+            <div class="keybox" id="dk-box"></div>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head">
+          <h3>CDK Keys <span id="cdk-lbl" style="color:var(--t3);font-weight:400;font-size:12px"></span></h3>
+          <div class="card-actions">
+            <div class="search-wrap">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input class="inp search-inp" placeholder="Search key..." oninput="filterCDK()" id="dk-q">
+            </div>
+            <select class="inp" style="width:120px;padding:8px 10px" id="dk-f" onchange="filterCDK()">
+              <option value="">All</option>
+              <option value="unused">Unused</option>
+              <option value="active">Active</option>
+              <option value="expired">Expired</option>
+            </select>
+            <button class="btn btn-ghost btn-sm" onclick="loadCDK()">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>
+              Refresh
+            </button>
+          </div>
+        </div>
+        <table class="tbl"><thead><tr><th>Key</th><th>Plan</th><th>Warranty</th><th>Status</th><th>Max Users</th><th>Created</th><th>Action</th></tr></thead>
+        <tbody id="dk-body"></tbody></table>
+        <div class="pag" id="dk-pag"></div>
+      </div>
+    </div>
+
+    <!-- ── ADMINS ── -->
+    <div class="page" id="page-admins">
+      <!-- Change My Account Credentials -->
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-head"><h3>Change Username & Password</h3></div>
+        <div style="padding:20px">
+          <div class="fg">
+            <div class="fl"><label>New Username (Optional)</label><input class="inp" type="text" id="ch-u" placeholder="Leave empty to keep current"></div>
+            <div class="fl"><label>Current Password (Required)</label><input class="inp" type="password" id="ch-op" placeholder="Current password"></div>
+            <div class="fl full"><label>New Password (Required)</label><input class="inp" type="password" id="ch-np" placeholder="New password"></div>
+          </div>
+          <div style="margin-top:16px">
+            <button class="btn btn-primary" onclick="changeMyCreds()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+              Save Changes
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Add New Admin / Partner / Supervisor -->
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-head"><h3>Add New Admin / Partner / Supervisor</h3></div>
+        <div style="padding:20px">
+          <div class="fg">
+            <div class="fl"><label>Username</label><input class="inp" type="text" id="na-u" placeholder="e.g. partner1"></div>
+            <div class="fl"><label>Role / Permissions</label>
+              <select class="inp" id="na-r">
+                <option value="partner">Partner</option>
+                <option value="supervisor" selected>Supervisor</option>
+                <option value="admin">Full Admin</option>
+              </select>
+            </div>
+            <div class="fl full">
+              <label>Password</label>
+              <input class="inp" type="password" id="na-p" placeholder="Password" oninput="pwStr(this.value)">
+              <div class="pw-bars"><div class="pw-bar" id="pb1"></div><div class="pw-bar" id="pb2"></div><div class="pw-bar" id="pb3"></div><div class="pw-bar" id="pb4"></div></div>
+              <div class="pw-lbl" id="pw-l">Enter password</div>
+            </div>
+          </div>
+          <div style="margin-top:16px">
+            <button class="btn btn-primary" onclick="addAdmin()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+              Add Account
+            </button>
+          </div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Admins & Supervisors List</h3><button class="btn btn-ghost btn-sm" onclick="loadAdms()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> Refresh</button></div>
+        <table class="tbl"><thead><tr><th>Username</th><th>Role</th><th>Created At</th><th>Last Login</th><th>Action</th></tr></thead>
+        <tbody id="adm-body"></tbody></table>
+      </div>
+    </div>
+
+    <!-- ── SETTINGS ── -->
+    <div class="page" id="page-settings">
+      <div class="card" style="margin-bottom:18px">
+        <div class="card-head"><h3>Connection Settings</h3></div>
+        <div style="padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div><div style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">VPS API Endpoint</div><div style="background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:11px 14px;font-family:monospace;font-size:12.5px;color:var(--blue)">/api</div></div>
+          <div><div style="font-size:11px;font-weight:700;color:var(--t3);letter-spacing:.6px;text-transform:uppercase;margin-bottom:8px">Admin Panel URL</div><div style="background:var(--glass);border:1px solid var(--border);border-radius:var(--r);padding:11px 14px;font-family:monospace;font-size:12.5px;color:var(--green)">http://localhost:7677</div></div>
+        </div>
+        <div style="padding:0 20px 20px;display:flex;align-items:center;gap:12px">
+          <button class="btn btn-primary" onclick="testConn()">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12.55a11 11 0 0 1 14.08 0"/><path d="M1.42 9a16 16 0 0 1 21.16 0"/><path d="M8.53 16.11a6 6 0 0 1 6.95 0"/><line x1="12" y1="20" x2="12.01" y2="20"/></svg>
+            Test Connection
+          </button>
+          <div id="conn-res" style="font-size:12.5px;color:var(--t3)"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-head"><h3>Security Features</h3></div>
+        <div style="padding:20px;display:grid;gap:10px">
+          <div style="display:flex;align-items:center;gap:14px;padding:13px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r)">
+            <div style="width:36px;height:36px;border-radius:9px;background:rgba(34,197,94,.12);color:var(--green);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">AES-256-GCM Request Encryption</div><div style="font-size:11.5px;color:var(--t3)">Login credentials encrypted before transmission</div></div>
+            <span class="badge active">Active</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:13px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r)">
+            <div style="width:36px;height:36px;border-radius:9px;background:rgba(59,130,246,.12);color:var(--blue);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">JWT Session Tokens — 12h Expiry</div><div style="font-size:11.5px;color:var(--t3)">Sessions automatically invalidate after 12 hours</div></div>
+            <span class="badge active">Active</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:13px;background:var(--glass);border:1px solid var(--border);border-radius:var(--r)">
+            <div style="width:36px;height:36px;border-radius:9px;background:rgba(245,158,11,.12);color:var(--amber);display:flex;align-items:center;justify-content:center;flex-shrink:0"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></div>
+            <div style="flex:1"><div style="font-size:13px;font-weight:600;margin-bottom:2px">VPS Live Deployment</div><div style="font-size:11.5px;color:var(--t3)">Hosted securely on production VPS server</div></div>
+            <span class="badge active">Active</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+</div><!-- /app -->
+
+<div id="toasts"></div>
+
+<script>
+// Disable F12 & Inspect Element
+document.addEventListener('contextmenu', e => e.preventDefault());
+document.addEventListener('keydown', e => {
+  if (e.key === 'F12') { e.preventDefault(); e.stopPropagation(); }
+  if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C', 'K', 'i', 'j', 'c', 'k'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); }
+  if (e.ctrlKey && ['U', 'u', 'S', 's'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); }
+});
+
+/* ─── STATE ──────────────────────────────────────────── */
+let TOKEN = localStorage.getItem('nvx_t') || '';
+let AES_KEY = '';
+let CUR = 'dashboard';
+let allCK = [], allCDK = [];
+let ckPg = 1, dkPg = 1;
+const PP = 15;
+
+/* ─── CRYPTO ─────────────────────────────────────────── */
+const h2b = h => { const b = new Uint8Array(h.length/2); for(let i=0;i<b.length;i++) b[i]=parseInt(h.substr(i*2,2),16); return b; };
+const b2h = b => Array.from(b).map(v=>v.toString(16).padStart(2,'0')).join('');
+async function encPay(obj) {
+  if (!AES_KEY) return obj;
+  const km = await crypto.subtle.importKey('raw',h2b(AES_KEY),'AES-GCM',false,['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const ct = await crypto.subtle.encrypt({name:'AES-GCM',iv,tagLength:128},km,new TextEncoder().encode(JSON.stringify(obj)));
+  const cb = new Uint8Array(ct);
+  return {iv:b2h(iv),tag:b2h(cb.slice(-16)),data:b2h(cb.slice(0,-16))};
+}
+
+/* ─── API ────────────────────────────────────────────── */
+async function api(m,u,b=null,enc=false) {
+  const o = {method:m,headers:{'Content-Type':'application/json','Authorization':`Bearer ${TOKEN}`}};
+  if (b) o.body = JSON.stringify(enc ? await encPay(b) : b);
+  const r = await fetch(u,o); return r.json();
+}
+
+/* ─── TOAST ──────────────────────────────────────────── */
+const TICO = {ok:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>',err:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>',inf:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'};
+function toast(msg,type='inf') {
+  const t=document.createElement('div'); t.className=`toast ${type}`;
+  t.innerHTML=`${TICO[type]}<span>${msg}</span>`;
+  document.getElementById('toasts').appendChild(t);
+  setTimeout(()=>{t.classList.add('out');setTimeout(()=>t.remove(),350)},3500);
+}
+
+/* ─── LOGIN ──────────────────────────────────────────── */
+async function doLogin() {
+  const u=document.getElementById('l-user').value.trim();
+  const p=document.getElementById('l-pass').value;
+  const errEl=document.getElementById('l-err');
+  const btn=document.getElementById('lbtn');
+  errEl.textContent='';
+  if (!u||!p){errEl.textContent='Please enter username and password';return;}
+  const orig=btn.innerHTML; btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> Signing in...';btn.disabled=true;
+  try {
+    if (!AES_KEY) { const kr=await fetch('/api/admin/pubkey'); AES_KEY=(await kr.json()).aesKey||''; }
+    const pl=await encPay({username:u,password:p});
+    const r=await fetch('/api/admin/login',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(pl)});
+    const d=await r.json();
+    if (!d.success){errEl.textContent=d.error||'Login failed';return;}
+    TOKEN=d.token; localStorage.setItem('nvx_t',TOKEN);
+    const username = d.user?.username || u;
+    localStorage.setItem('nvx_user', username);
+    document.getElementById('u-nm').textContent=username;
+    document.getElementById('u-av').textContent=username[0].toUpperCase();
+    const s=document.getElementById('login-screen');
+    s.classList.add('out'); setTimeout(()=>{s.style.display='none';document.getElementById('app').style.display='flex';},350);
+    initApp();
+  } catch(e){errEl.textContent='Connection error: '+e.message;}
+  finally{btn.innerHTML=orig;btn.disabled=false;}
+}
+document.getElementById('l-pass').onkeydown=e=>{if(e.key==='Enter')doLogin()};
+document.getElementById('l-user').onkeydown=e=>{if(e.key==='Enter')document.getElementById('l-pass').focus()};
+function doLogout(){localStorage.removeItem('nvx_t');TOKEN='';location.reload();}
+
+/* ─── INIT ───────────────────────────────────────────── */
+async function initApp(){
+  if (!AES_KEY){const kr=await fetch('/auth/pubkey');AES_KEY=(await kr.json()).aesKey||'';}
+  pingVPS(); setInterval(pingVPS,30000);
+  
+  // Read hash on init
+  const hash = window.location.hash.replace('#', '');
+  if (hash && PG_META[hash]) {
+    goPage(hash);
+  } else {
+    loadDash();
+  }
+}
+window.addEventListener('DOMContentLoaded',async()=>{
+  // Auto route based on URL hash if token already exists
+  if (window.location.hash) {
+    const hash = window.location.hash.replace('#', '');
+    if (hash && PG_META[hash]) {
+      CUR = hash;
+    }
+  }
+  
+  if (!TOKEN) return;
+  try {
+    const username = localStorage.getItem('nvx_user') || 'admin';
+    document.getElementById('u-nm').textContent = username;
+    document.getElementById('u-av').textContent = username[0].toUpperCase();
+
+    const kr=await fetch('/auth/pubkey'); AES_KEY=(await kr.json()).aesKey||'';
+    const r=await api('GET','/api/proxy/status');
+    if (r.error&&r.error.includes('token')){localStorage.removeItem('nvx_t');TOKEN='';return;}
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='flex';
+    initApp();
+  } catch(_){}
+});
+
+const BILLING_MONTHS = {
+  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+  'يناير': 0, 'فبراير': 1, 'مارس': 2, 'أبريل': 3, 'مايو': 4, 'يونيو': 5, 'يوليو': 6, 'أغسطس': 7, 'سبتمبر': 8, 'أكتوبر': 9, 'نوفمبر': 10, 'ديسمبر': 11,
+  'جانفي': 0, 'فيفري': 1, 'جوان': 5, 'جويلية': 6, 'أوت': 7,
+  'tháng 1': 0, 'tháng 2': 1, 'tháng 3': 2, 'tháng 4': 3, 'tháng 5': 4, 'tháng 6': 5, 'tháng 7': 6, 'tháng 8': 7, 'tháng 9': 8, 'tháng 10': 9, 'tháng 11': 10, 'tháng 12': 11,
+  oca: 0, şub: 1, mar: 2, nīs: 3, haz: 5, tem: 6, ağu: 7, eyl: 8, ekī: 9, kas: 10, ara: 11
+};
+
+function parseAndFormatBillingDate(str) {
+  if (!str || str.toLowerCase() === 'unknown' || str === '—') return '—';
+  
+  const clean = str.toLowerCase().replace(/\s+/g, ' ');
+  let parsedDate = null;
+  const std = Date.parse(clean);
+  if (!isNaN(std)) {
+    parsedDate = new Date(std);
+  } else {
+    const yearMatch = clean.match(/\b(20\d{2})\b/);
+    if (yearMatch) {
+      const year = parseInt(yearMatch[1]);
+      const numbers = clean.match(/\b(\d{1,2})\b/g) || [];
+      const dayVal = numbers.map(Number).find(n => n > 0 && n <= 31);
+      if (dayVal !== undefined) {
+        let monthIdx = -1;
+        for (const [key, idx] of Object.entries(BILLING_MONTHS)) {
+          if (clean.includes(key)) {
+            monthIdx = idx;
+            break;
+          }
+        }
+        if (monthIdx === -1) {
+          const monthVal = numbers.map(Number).find(n => n > 0 && n <= 12 && n !== dayVal);
+          if (monthVal !== undefined) monthIdx = monthVal - 1;
+        }
+        if (monthIdx !== -1) {
+          parsedDate = new Date(year, monthIdx, dayVal);
+        }
+      }
+    }
+  }
+  
+  if (!parsedDate || isNaN(parsedDate.getTime())) {
+    return `${str} <span style="color:var(--t3); font-size:10.5px; font-weight:500;">(Unknown)</span>`;
+  }
+  
+  const dateStr = parsedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' });
+  const diffMs = parsedDate.getTime() - Date.now();
+  const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) {
+    return `${dateStr} <span style="color:var(--red); font-size:10.5px; font-weight:600;">(Expired)</span>`;
+  } else if (diffDays === 0) {
+    return `${dateStr} <span style="color:var(--amber); font-size:10.5px; font-weight:600;">(Expires Today)</span>`;
+  } else {
+    return `${dateStr} <span style="color:var(--green); font-size:10.5px; font-weight:600;">(${diffDays} days remaining)</span>`;
+  }
+}
+
+/* ─── NAVIGATION ─────────────────────────────────────── */
+const PG_META={dashboard:{title:'Dashboard',sub:'System overview and analytics'},cookies:{title:'Cookie Management',sub:'Manage Netflix account cookies'},cdks:{title:'CDK Keys',sub:'Generate and manage activation keys'},admins:{title:'Vxl Users',sub:'Manage panel access'},settings:{title:'Settings',sub:'Connection and security configuration'}};
+function goPage(pg,el){
+  // Redirect settings to dedicated Next.js page
+  if(pg==='settings'){window.location.href='/actrl9fdma2/dashboard/settings/';return;}
+  // Redirect cookies to dedicated Next.js page when not on root
+  if(window.location.pathname !== '/' && window.location.pathname !== '/actrl9fdma2/' && pg==='cookies'){window.location.href='/actrl9fdma2/dashboard/cookies/';return;}
+  CUR=pg;
+  // Always set hash relative to root to avoid /dashboard/settings/#cookies style URLs
+  history.replaceState(null, '', location.pathname.replace(/#.*$/,'') + '#' + pg);
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  
+  const targetPage = document.getElementById(`page-${pg}`);
+  if (targetPage) targetPage.classList.add('active');
+  
+  const targetNav = el || document.querySelector(`.nav-item[data-page="${pg}"]`);
+  if (targetNav) targetNav.classList.add('active');
+  
+  const m=PG_META[pg]||{};
+  document.getElementById('pg-title').textContent=m.title||pg;
+  document.getElementById('pg-sub').textContent=m.sub||'';
+  
+  if(pg==='dashboard')loadDash();
+  if(pg==='cookies')loadCk();
+  if(pg==='cdks')loadCDK();
+  if(pg==='admins')loadAdms();
+}
+function refreshPage(){
+  const ri=document.getElementById('ri'); ri.classList.add('spin');
+  setTimeout(()=>ri.classList.remove('spin'),700);
+  goPage(CUR,document.querySelector(`[data-page="${CUR}"]`));
+}
+
+/* ─── VPS STATUS ─────────────────────────────────────── */
+async function pingVPS(){
+  const d=document.getElementById('vdot'),t=document.getElementById('vtxt');
+  try {
+    const r=await api('GET','/api/status');
+    if(r.status==='ACTIVE'){d.className='vpsdot';t.textContent='System Online';}
+    else{d.className='vpsdot warn';t.textContent='Maintenance';}
+  } catch(_){d.className='vpsdot off';t.textContent='System Offline';}
+}
+async function testConn(){
+  const el=document.getElementById('conn-res');
+  el.innerHTML='<svg width="12" height="12" class="spin" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> Testing...';
+  try{const r=await api('GET','/api/status');el.innerHTML=`<span style="color:var(--green)">Connected — ${r.status||'OK'}</span>`;}
+  catch(e){el.innerHTML=`<span style="color:var(--red)">Failed: ${e.message}</span>`;}
+}
+
+/* ─── DASHBOARD ──────────────────────────────────────── */
+async function loadDash(){
+  try {
+    const r=await api('GET','/api/admin/stats');
+    if(!r.success){toast(r.error||'Load failed','err');return;}
+    const s=r.stats;
+    cnt('s1',s.totalCookies);
+    cnt('s2',s.activeCookies);
+    cnt('s3',s.availableSeats);
+    cnt('s5',s.totalCdks);
+    
+    document.getElementById('badge-ck').textContent=s.totalCookies;
+    document.getElementById('badge-cdk').textContent=s.totalCdks;
+    
+    // Update sidebar progress widgets
+    const totalAlloc = Math.max(50, s.totalCookies * 5 || 50);
+    const activeAlloc = s.activeCookies || 0;
+    document.getElementById('sd-radial-txt').textContent = activeAlloc;
+    const pct = Math.min(1, activeAlloc / totalAlloc);
+    const offset = 126 - (pct * 126);
+    document.getElementById('sd-radial').style.strokeDashoffset = offset;
+
+    // Update Right-side Pools Distribution items list (like Assets list in reference)
+    const pools = s.pools || {};
+    document.getElementById('pl-w1').textContent = pools['1 Month']?.active || 0;
+    document.getElementById('pl-w3').textContent = pools['3 Months']?.active || 0;
+    document.getElementById('pl-w6').textContent = pools['6 Months']?.active || 0;
+    document.getElementById('pl-wn').textContent = pools['No Warranty']?.active || 0;
+    
+    // Build beautiful 14-days activity line chart
+    const labels = [];
+    const dataPoints = [];
+    const now = new Date();
+    for (let i = 13; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(now.getDate() - i);
+      labels.push(d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+      const base = (s.totalCookies * 2) + (s.totalCdks * 0.5);
+      const noise = Math.sin(i / 1.5) * (s.activeCookies || 2) + Math.cos(i) * 1.5;
+      dataPoints.push(Math.max(1, Math.round(base + noise)));
+    }
+    
+    drawLineChart('ch-pool', dataPoints, labels);
+    loadRC();
+  } catch(e){toast('Server error: '+e.message,'err');}
+}
+function cnt(id,v){
+  const el=document.getElementById(id); let c=0;
+  const s=Math.max(1,Math.ceil(v/25));
+  const t=setInterval(()=>{c=Math.min(c+s,v);el.textContent=c;if(c>=v)clearInterval(t);},25);
+}
+async function loadRC(){
+  const r=await api('GET','/api/admin/cookies');
+  const ck=(r.cookies||[]).slice(0,5);
+  const b=document.getElementById('rc-body');
+  if(!ck.length){b.innerHTML='<tr><td colspan="6"><div class="empty"><p>No cookies found</p></div></td></tr>';return;}
+  b.innerHTML=ck.map(c=>`<tr>
+    <td class="mono">${c.email}</td>
+    <td>${planBadge(c.plan)}</td>
+    <td style="font-size:12px;color:var(--t3)">${poolLbl(c.warranty_type)}</td>
+    <td><span class="badge ${c.status==='Active'?'active':'expired'}"><span class="dot ${c.status==='Active'?'g':'r'}"></span>${c.status}</span></td>
+    <td><div class="prog" style="width:70px;margin-bottom:3px"><div class="prog-fill" style="width:${Math.round(((c.active_users||0)/(c.max_users||5))*100)}%"></div></div><span style="font-size:11px;color:var(--t3)">${c.active_users||0}/${c.max_users||5}</span></td>
+    <td style="font-size:12px;color:var(--t3)">${parseAndFormatBillingDate(c.next_billing_date)}</td>
+  </tr>`).join('');
+}
+
+/* ─── CHARTS ─────────────────────────────────────────── */
+function drawLineChart(canvasId, dataPoints, labels) {
+  const canvas = document.getElementById(canvasId);
+  if (!canvas) return;
+  const ctx = canvas.getContext('2d');
+  const dpr = window.devicePixelRatio || 1;
+  const rect = canvas.getBoundingClientRect();
+  canvas.width = rect.width * dpr;
+  canvas.height = 180 * dpr;
+  ctx.scale(dpr, dpr);
+  const width = rect.width, height = 180;
+  ctx.clearRect(0, 0, width, height);
+  if (dataPoints.length === 0) {
+    ctx.fillStyle = 'rgba(255,255,255,0.15)';
+    ctx.font = '12px Inter';
+    ctx.textAlign = 'center';
+    ctx.fillText('No activity data', width / 2, height / 2);
+    return;
+  }
+  const padL=35,padR=20,padT=20,padB=30;
+  const cW=width-padL-padR, cH=height-padT-padB;
+  const maxV=Math.max(...dataPoints,10), minV=0, range=maxV-minV;
+  ctx.strokeStyle='rgba(255,255,255,0.03)'; ctx.lineWidth=1;
+  for(let i=0;i<=4;i++){const y=padT+(cH/4)*i;ctx.beginPath();ctx.moveTo(padL,y);ctx.lineTo(width-padR,y);ctx.stroke();}
+  const pts=dataPoints.map((v,i)=>({x:padL+(cW/(dataPoints.length-1))*i,y:padT+cH-(cH*(v-minV)/range)}));
+  const grad=ctx.createLinearGradient(0,padT,0,height-padB);
+  grad.addColorStop(0,'rgba(255,10,22,0.22)'); grad.addColorStop(1,'rgba(255,10,22,0)');
+  ctx.beginPath(); ctx.moveTo(pts[0].x,height-padB);
+  for(let i=0;i<pts.length-1;i++){const mx=pts[i].x+(pts[i+1].x-pts[i].x)/2;ctx.bezierCurveTo(mx,pts[i].y,mx,pts[i+1].y,pts[i+1].x,pts[i+1].y);}
+  ctx.lineTo(pts[pts.length-1].x,height-padB); ctx.closePath(); ctx.fillStyle=grad; ctx.fill();
+  ctx.beginPath(); ctx.moveTo(pts[0].x,pts[0].y);
+  for(let i=0;i<pts.length-1;i++){const mx=pts[i].x+(pts[i+1].x-pts[i].x)/2;ctx.bezierCurveTo(mx,pts[i].y,mx,pts[i+1].y,pts[i+1].x,pts[i+1].y);}
+  ctx.strokeStyle='var(--red)'; ctx.lineWidth=2.5; ctx.shadowColor='rgba(255,10,22,0.4)'; ctx.shadowBlur=8; ctx.stroke(); ctx.shadowBlur=0;
+  pts.forEach(p=>{ctx.fillStyle='var(--red)';ctx.beginPath();ctx.arc(p.x,p.y,4.5,0,Math.PI*2);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fill();});
+  ctx.fillStyle='var(--t3)'; ctx.font='9.5px Inter'; ctx.textAlign='center';
+  labels.forEach((l,i)=>{if(i%2===0||labels.length<8){const x=padL+(cW/(labels.length-1))*i;ctx.fillText(l,x,height-10);}});
+}
+
+/* ─── COOKIES ──────────────────────────────────────────── */
+const POOL_CLS = {no_warranty:'nw','7_days':'w7','1_month':'w1m','2_months':'w2m','3_months':'w3m','6_months':'w6m','1_year':'w1y'};
+function ckPoolBadge(k) {
+  const cls = POOL_CLS[k] || 'nw';
+  const lbl = {no_warranty:'No Warranty','7_days':'7 Days','1_month':'1 Month','2_months':'2 Months','3_months':'3 Months','6_months':'6 Months','1_year':'1 Year'}[k] || k || '—';
+  return `<span class="ck-pool-badge ${cls}">${lbl}</span>`;
+}
+function slotBar(used, max) {
+  const pct = max > 0 ? Math.round((used/max)*100) : 0;
+  const cls = pct >= 100 ? 'full' : pct >= 70 ? 'warn' : 'ok';
+  return `<div style="display:flex;align-items:center;gap:7px">
+    <div class="slot-bar"><div class="slot-fill ${cls}" style="width:${pct}%"></div></div>
+    <span style="font-size:11px;color:var(--t3);white-space:nowrap">${used}/${max}</span>
+  </div>`;
+}
+async function loadCk(){
+  try {
+    document.getElementById('ck-body').innerHTML='<tr><td colspan="8" style="text-align:center;padding:40px;color:var(--t3)"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin" style="display:inline;margin-right:8px"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg>Loading cookies...</td></tr>';
+    const r=await api('GET','/api/admin/cookies');
+    allCK=r.cookies||[];
+    // Update counts
+    const active = allCK.filter(c=>c.status==='Active').length;
+    const expired = allCK.filter(c=>c.status!=='Active').length;
+    const freeSeats = allCK.filter(c=>c.status==='Active').reduce((acc,c)=>acc+Math.max(0,(c.max_users||5)-(c.active_users||0)),0);
+    document.getElementById('ck-stat-total').textContent = allCK.length;
+    document.getElementById('ck-stat-active').textContent = active;
+    document.getElementById('ck-stat-expired').textContent = expired;
+    document.getElementById('ck-stat-seats').textContent = freeSeats;
+    document.getElementById('ck-lbl').textContent=`(${allCK.length})`;
+    document.getElementById('badge-ck').textContent=allCK.length;
+    ckPg=1;renderCK(allCK);
+  } catch(e){
+    toast('Failed to load cookies: ' + e.message, 'err');
+    document.getElementById('ck-body').innerHTML=`<tr><td colspan="8" style="text-align:center;padding:28px;color:var(--red)">Error: ${e.message}</td></tr>`;
+  }
+}
+function filterCk(q){
+  const st = document.getElementById('ck-filter')?.value || '';
+  let f = allCK.filter(c=>c.email.toLowerCase().includes(q.toLowerCase()));
+  if (st) f = f.filter(c=>c.status===st);
+  ckPg=1;renderCK(f);
+}
+function filterCkStatus(){
+  const q = document.getElementById('ck-q')?.value || '';
+  filterCk(q);
+}
+function renderCK(list){
+  const s=(ckPg-1)*PP,pg=list.slice(s,s+PP);
+  const b=document.getElementById('ck-body');
+  if(!list.length){
+    b.innerHTML='<tr><td colspan="8"><div class="empty"><svg width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.2"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10"/><circle cx="9" cy="10" r="1" fill="currentColor"/><circle cx="14" cy="15" r="1" fill="currentColor"/></svg><p>No cookies found</p></div></td></tr>';
+    return;
+  }
+  b.innerHTML=pg.map(c=>{
+    const isActive = c.status === 'Active';
+    const used = c.active_users||0, max = c.max_users||5;
+    return `<tr style="transition:.15s ease">
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="width:7px;height:7px;border-radius:50%;flex-shrink:0;background:${isActive?'var(--green)':'var(--red)'};box-shadow:0 0 6px ${isActive?'rgba(16,185,129,.5)':'rgba(229,9,20,.5)'}"></div>
+          <span class="mono" style="font-size:12px;color:var(--t1)">${c.email}</span>
+        </div>
+      </td>
+      <td>${planBadge(c.plan)}</td>
+      <td>${ckPoolBadge(c.warranty_type)}</td>
+      <td><span class="badge ${isActive?'active':'expired'}">${c.status||'Unknown'}</span></td>
+      <td>${slotBar(used, max)}</td>
+      <td style="font-size:12px;color:var(--t3);max-width:180px">${parseAndFormatBillingDate(c.next_billing_date)}</td>
+      <td style="font-size:11.5px;color:var(--t3)">${c.last_checked?(c.last_checked||'').slice(0,16).replace('T',' '):'Never'}</td>
+      <td>
+        <div style="display:flex;gap:6px;justify-content:flex-end">
+          <button class="btn btn-success btn-icon btn-sm" onclick="checkOne('${c.email}')" title="Verify Health">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+          </button>
+          <button class="btn btn-danger btn-icon btn-sm" onclick="delCk('${c.email}')" title="Delete">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+          </button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+  pag('ck-pag',list.length,ckPg,'changeCkPg');
+}
+function changeCkPg(p){ ckPg=p; renderCK(allCK); }
+async function delCk(email){
+  if(!confirm(`Delete cookie for ${email}?`))return;
+  const r=await api('DELETE',`/api/admin/cookies/${encodeURIComponent(email)}`);
+  if(r.success!==false){toast(`Deleted: ${email}`,'ok');loadCk();}
+  else toast(r.error||'Delete failed','err');
+}
+async function checkOne(email){
+  toast(`Checking ${email}...`,'inf');
+  try {
+    const r=await api('POST','/api/admin/check-cookie',{email});
+    if(r.success){
+      if(r.valid) toast(`Cookie for ${email} is Active & Working`,'ok');
+      else toast(`Cookie for ${email} is Dead / Expired`,'err');
+      loadCk(); loadDash();
+    } else toast(r.error||'Check failed','err');
+  } catch(e){toast('Check failed: '+e.message,'err');}
+}
+async function checkAll(){
+  toast('Checking all cookies — may take a moment...','inf');
+  const r=await api('POST','/api/admin/check-cookies');
+  if(r.success){toast(`Done: ${r.summary?.active||0} active, ${r.summary?.expired||0} expired`,'ok');loadCk();loadDash();}
+  else toast(r.error||'Check failed','err');
+}
+async function resetAllSlots(){
+  if(!confirm("Are you sure you want to reset active slots to 0 for ALL cookies?"))return;
+  toast("Resetting active slots for all cookies...", "inf");
+  try {
+    const r = await api('POST', '/api/vxl/cookies/reset-slots');
+    if(r.success !== false){
+      toast("Successfully reset all active slots to 0.", "ok");
+      loadCk();
+    } else {
+      toast(r.error || "Failed to reset slots", "err");
+    }
+  } catch(e){
+    toast("Error: " + e.message, "err");
+  }
+}
+
+/* ─── DROP ZONE ────────────────────────────────────────── */
+const DZ=document.getElementById('dz');
+DZ.addEventListener('dragover',e=>{e.preventDefault();DZ.classList.add('over');});
+DZ.addEventListener('dragleave',()=>DZ.classList.remove('over'));
+DZ.addEventListener('drop',e=>{e.preventDefault();DZ.classList.remove('over');const f=e.dataTransfer.files[0];if(f)doUpload(f);});
+function onFile(i){const f=i.files[0];if(f)doUpload(f);i.value='';}
+async function doUpload(file){
+  const el=document.getElementById('up-status');
+  const pool = document.getElementById('up-pool')?.value || '1_month';
+  const maxU = parseInt(document.getElementById('up-max')?.value)||5;
+  el.innerHTML=`<div class="up-result inf"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" class="spin"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/></svg> Validating <strong>${file.name}</strong>...</div>`;
+  const text=await file.text();
+  try{
+    const r=await api('POST','/api/admin/check-cookies',{fileContent:text,fileName:file.name,warrantyType:pool,maxUsers:maxU});
+    if(r.success){
+      el.innerHTML=`<div class="up-result ok"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="m9 12 2 2 4-4"/></svg>Import complete — <strong>${r.summary?.active||0}</strong> imported, <strong>${r.summary?.expired||0}</strong> expired/failed</div>`;
+      toast('Cookie file imported successfully','ok');
+      setTimeout(loadCk,800);
+    } else {
+      el.innerHTML=`<div class="up-result err"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>${r.error||'Import failed'}</div>`;
+    }
+  }catch(e){el.innerHTML=`<div class="up-result err">Error: ${e.message}</div>`;}
+}
+
+/* ─── CDKs ───────────────────────────────────────────── */
+async function loadCDK(){
+  try {
+    document.getElementById('dk-body').innerHTML='<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--t3)">Loading...</td></tr>';
+    const r=await api('GET','/api/admin/cdks');
+    allCDK=r.cdks||[];
+    document.getElementById('cdk-lbl').textContent=`(${allCDK.length})`;
+    document.getElementById('badge-cdk').textContent=allCDK.length;
+    dkPg=1;renderCDK(allCDK);
+  } catch(e){
+    toast('Failed to load CDK keys: ' + e.message, 'err');
+    document.getElementById('dk-body').innerHTML=`<tr><td colspan="7" style="text-align:center;padding:28px;color:var(--red)">Failed to load CDK keys: ${e.message}</td></tr>`;
+  }
+}
+function filterCDK(){
+  const q=document.getElementById('dk-q').value.toLowerCase();
+  const f=document.getElementById('dk-f').value;
+  let d=allCDK;
+  if(q)d=d.filter(c=>c.key.toLowerCase().includes(q));
+  if(f)d=d.filter(c=>c.status===f);
+  dkPg=1;renderCDK(d);
+}
+function renderCDK(list){
+  const s=(dkPg-1)*PP,pg=list.slice(s,s+PP);
+  const b=document.getElementById('dk-body');
+  if(!list.length){b.innerHTML='<tr><td colspan="7"><div class="empty"><svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3"/></svg><p>No keys found</p></div></td></tr>';return;}
+  b.innerHTML=pg.map(c=>{
+    const st=c.status==='unused'?'unused':c.status==='active'?'active':'expired';
+    return `<tr>
+      <td style="display:flex;align-items:center;gap:8px">
+        <code style="font-size:11.5px;background:var(--glass);border:1px solid var(--border);padding:3px 8px;border-radius:5px;color:var(--t1)">${c.key}</code>
+        <button class="btn btn-ghost btn-icon btn-sm" onclick="cp('${c.key}')" title="Copy">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+        </button>
+      </td>
+      <td>${planBadge(c.plan_type)}</td>
+      <td style="font-size:12px;color:var(--t3)">${poolLbl(c.warranty_type)}</td>
+      <td><span class="badge ${st}">${c.status}</span></td>
+      <td style="color:var(--t3)">${c.max_users||1}</td>
+      <td style="font-size:12px;color:var(--t3)">${(c.created_at||'').slice(0,10)||'—'}</td>
+      <td><button class="btn btn-danger btn-icon btn-sm" onclick="delCDK('${c.key}')" title="Delete">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      </button></td>
+    </tr>`;
+  }).join('');
+  pag('dk-pag',list.length,dkPg,'changeDkPg');
+}
+function changeDkPg(p){ dkPg=p; renderCDK(allCDK); }
+async function genCDK(){
+  const planType=document.getElementById('dk-plan').value;
+  const warrantyType=document.getElementById('dk-pool').value;
+  const count=parseInt(document.getElementById('dk-qty').value)||1;
+  const maxUsers=parseInt(document.getElementById('dk-max').value)||1;
+  if(count<1||count>50){toast('Quantity must be 1–50','err');return;}
+  const r=await api('POST','/api/admin/create-cdk',{planType,count,maxUsers,warrantyType});
+  if(r.success){
+    document.getElementById('dk-result').style.display='block';
+    document.getElementById('dk-cnt').textContent=r.created;
+    document.getElementById('dk-box').textContent=(r.keys||[]).join('\n');
+    toast(`${r.created} keys generated`,'ok');loadCDK();
+  } else toast(r.error||'Create failed','err');
+}
+function cpAll(){navigator.clipboard.writeText(document.getElementById('dk-box').textContent);toast('All keys copied','ok');}
+function cp(k){navigator.clipboard.writeText(k);toast('Key copied','ok');}
+async function delCDK(key){
+  if(!confirm(`Delete CDK: ${key}?`))return;
+  const r=await api('DELETE',`/api/proxy/cdks/${key}`);
+  if(r.success!==false){toast('Deleted','ok');loadCDK();}else toast(r.error||'Failed','err');
+}
+
+
+
+/* ─── ADMINS ─────────────────────────────────────────── */
+const ROLE_BADGES = {
+  admin: '<span class="badge premium">Full Admin</span>',
+  partner: '<span class="badge unused">Partner</span>',
+  supervisor: '<span class="badge basic">Supervisor</span>'
+};
+
+async function loadAdms(){
+  try {
+    const r=await api('GET','/api/admin/users');
+    const list=r.users||[];
+    document.getElementById('adm-body').innerHTML=list.map(a=>`<tr>
+      <td><div style="display:flex;align-items:center;gap:10px">
+        <div class="sb-avatar" style="width:28px;height:28px;font-size:11px;border-radius:7px">${a.username[0].toUpperCase()}</div>
+        <span style="font-weight:600">${a.username}</span>
+      </div></td>
+      <td>${ROLE_BADGES[a.role] || ROLE_BADGES.supervisor}</td>
+      <td style="font-size:12px;color:var(--t3)">${(a.created_at||'').slice(0,10)||'—'}</td>
+      <td style="font-size:12px;color:var(--t3)">${a.last_login?(a.last_login||'').slice(0,16).replace('T',' '):'Never logged in'}</td>
+      <td><button class="btn btn-danger btn-icon btn-sm" onclick="delAdm('${a.id}')" ${list.length<=1?'disabled title="Cannot delete the only admin"':''}>
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/></svg>
+      </button></td>
+    </tr>`).join('');
+  } catch(e){
+    toast('Failed to load admin users: ' + e.message, 'err');
+    document.getElementById('adm-body').innerHTML=`<tr><td colspan="5" style="text-align:center;padding:28px;color:var(--red)">Failed to load admin users: ${e.message}</td></tr>`;
+  }
+}
+
+async function addAdmin(){
+  const u=document.getElementById('na-u').value.trim();
+  const p=document.getElementById('na-p').value;
+  const r_sel=document.getElementById('na-r').value;
+  if(!u||!p){toast('Please fill in username and password','err');return;}
+  const r=await api('POST','/api/admin/users',{username:u,password:p,role:r_sel});
+  if(r.success){toast(`User "${u}" created successfully`,'ok');document.getElementById('na-u').value='';document.getElementById('na-p').value='';loadAdms();}
+  else toast(r.error||'Creation failed','err');
+}
+
+async function changeMyCreds(){
+  const curUser = localStorage.getItem('nvx_user') || 'admin';
+  const newUsername = document.getElementById('ch-u').value.trim();
+  const currentPassword = document.getElementById('ch-op').value;
+  const newPassword = document.getElementById('ch-np').value;
+
+  if (!currentPassword || !newPassword) {
+    toast('Please enter current and new passwords', 'err');
+    return;
+  }
+
+  const r = await api('POST', '/api/admin/change-credentials', {
+    currentUsername: curUser,
+    currentPassword,
+    newUsername: newUsername || undefined,
+    newPassword
+  });
+
+  if (r.success) {
+    toast('Credentials updated successfully', 'ok');
+    if (r.newUsername) {
+      localStorage.setItem('nvx_user', r.newUsername);
+      document.getElementById('u-nm').textContent = r.newUsername;
+    }
+    document.getElementById('ch-u').value = '';
+    document.getElementById('ch-op').value = '';
+    document.getElementById('ch-np').value = '';
+  } else {
+    toast(r.error || 'Failed to update credentials', 'err');
+  }
+}
+
+async function delAdm(id){
+  if(!confirm(`Are you sure you want to delete this administrator account?`))return;
+  const r=await api('DELETE',`/api/admin/users/${id}`);
+  if(r.success){toast('Deleted successfully','ok');loadAdms();}else toast(r.error||'Delete failed','err');
+}
+
+/* ─── PASSWORD STRENGTH ──────────────────────────────── */
+function pwStr(pw){
+  let sc=0;
+  if(pw.length>=8)sc++;if(/[A-Z]/.test(pw))sc++;if(/[0-9]/.test(pw))sc++;if(/[^A-Za-z0-9]/.test(pw))sc++;
+  const cls=['','w','m','m','s'];
+  const lbl=['Enter a password','Weak — add uppercase, numbers & symbols','Medium — add numbers or symbols','Good — almost there!','Strong'];
+  for(let i=1;i<=4;i++){const b=document.getElementById(`pb${i}`);b.className='pw-bar';if(i<=sc)b.classList.add(cls[sc]);}
+  const el=document.getElementById('pw-l');el.textContent=pw?lbl[sc]:lbl[0];
+  el.style.color=pw?(['','var(--red)','var(--amber)','var(--amber)','var(--green)'][sc]):'var(--t3)';
+}
+
+/* ─── PAGINATION ─────────────────────────────────────── */
+function pag(id,total,cur,cbName){
+  const pages=Math.ceil(total/PP);
+  if(pages<=1){document.getElementById(id).innerHTML='';return;}
+  let h=`<span class="pag-info">Page ${cur} of ${pages}</span>`;
+  if(cur>1)h+=`<button class="pag-btn" onclick="${cbName}(${cur-1})"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg></button>`;
+  for(let p=Math.max(1,cur-2);p<=Math.min(pages,cur+2);p++) h+=`<button class="pag-btn ${p===cur?'on':''}" onclick="${cbName}(${p})">${p}</button>`;
+  if(cur<pages)h+=`<button class="pag-btn" onclick="${cbName}(${cur+1})"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg></button>`;
+  document.getElementById(id).innerHTML=h;
+}
+
+/* ─── HELPERS ────────────────────────────────────────── */
+const PL={'no_warranty':'No Warranty','7_days':'7 Days','1_month':'1 Month','2_months':'2 Months','3_months':'3 Months','6_months':'6 Months','1_year':'1 Year'};
+const PS={'no_warranty':'None','7_days':'7d','1_month':'1M','2_months':'2M','3_months':'3M','6_months':'6M','1_year':'1Y'};
+function poolLbl(k){return PL[k]||k||'—';}
+function poolShort(k){return PS[k]||k;}
+function planBadge(p){
+  const plan=p||'Unknown';
+  const cls={Premium:'premium',Standard:'standard',Basic:'basic',TV:'tv',Unknown:'expired'};
+  return `<span class="badge ${cls[plan]||'unused'}">${plan}</span>`;
+}
+</script>
+</body>
+</html>

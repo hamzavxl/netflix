@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Netflix CDK Portal | NETVXL</title>
+    <meta name="description" content="Redeem or verify your Netflix CDK activation code instantly.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css?v=2.2">
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 2v20h4V12l8 10h4V2h-4v10L8 2H4z' fill='%23E50914'/%3E%3C/svg%3E">
+</head>
+<body>
+
+    <div class="bg-grid"></div>
+    <div class="blob b1"></div>
+    <div class="blob b2"></div>
+
+    <div class="page-wrap">
+
+        <!-- Header -->
+        <header class="site-header">
+            <div class="header-top-row">
+                <div class="nf-logo-wrap">
+                    <span class="nf-wordmark">NETFLIX</span>
+                    <span class="site-divider"></span>
+                    <span class="site-label">CDK PORTAL</span>
+                </div>
+                <div class="header-right-actions">
+                    <button id="btn-api-docs" class="header-action-btn" title="System API Documentation">
+                        <i class="fa-solid fa-code"></i>
+                        <span>API</span>
+                    </button>
+                    <div class="status-indicator loading" id="system-status">
+                        <span class="status-dot"></span>
+                        <span class="status-text">CHECKING</span>
+                    </div>
+                </div>
+            </div>
+            <p class="site-sub">Activate your Netflix subscription instantly</p>
+        </header>
+
+        <!-- Main Card -->
+        <div class="card" id="main-card">
+
+            <!-- Tab Bar -->
+            <div class="tab-bar">
+                <button class="tab-btn active" data-tab="redeem">
+                    <i class="fa-solid fa-gift"></i><span>Redeem CDK</span>
+                </button>
+                <button class="tab-btn" data-tab="verify">
+                    <i class="fa-solid fa-magnifying-glass"></i><span>Verify CDK Keys</span>
+                </button>
+            </div>
+
+            <!-- ══ TAB: REDEEM ══ -->
+            <div class="tab-panel" id="panel-redeem">
+
+                <!-- Step 1: Enter CDK -->
+                <div id="step-input">
+                    <div class="field-group">
+                        <label class="field-label">Activation CDK Key</label>
+                        <div class="field-wrap">
+                            <i class="fa-solid fa-key field-icon"></i>
+                            <input type="text" id="cdk-input" class="field-input" placeholder="NETVXL-XXXXXX-XXXXXX" autocomplete="off" spellcheck="false">
+                            <button class="paste-btn" id="paste-btn">Paste</button>
+                        </div>
+                    </div>
+                    <button class="action-btn" id="verify-btn">
+                        <i class="fa-solid fa-shield-check btn-icon"></i>
+                        <span class="btn-label">Verify Code</span>
+                        <span class="btn-spinner hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+                    </button>
+                </div>
+
+                <!-- Step 2: Device Choice -->
+                <div id="step-device" class="hidden">
+                    <div class="plan-pill" id="plan-pill"></div>
+                    <p class="device-prompt">How do you want to activate?</p>
+                    <div class="device-big-grid">
+                        <button class="device-big-card" id="btn-phone">
+                            <div class="dbc-icon-wrap phone-icon">
+                                <i class="fa-solid fa-mobile-screen"></i>
+                            </div>
+                            <span class="dbc-title">Phone / Tablet</span>
+                            <span class="dbc-sub">Redirect directly to Netflix mobile app</span>
+                        </button>
+                        <button class="device-big-card" id="btn-pc">
+                            <div class="dbc-icon-wrap pc-icon">
+                                <i class="fa-solid fa-laptop"></i>
+                            </div>
+                            <span class="dbc-title">PC / Laptop</span>
+                            <span class="dbc-sub">Get browser link for PC or laptop</span>
+                        </button>
+                        <button class="device-big-card" id="btn-tv">
+                            <div class="dbc-icon-wrap tv-icon">
+                                <i class="fa-solid fa-tv"></i>
+                            </div>
+                            <span class="dbc-title">Smart TV</span>
+                            <span class="dbc-sub">Activate using code on TV screen</span>
+                        </button>
+                    </div>
+
+                    <!-- Device Confirm Bar -->
+                    <div id="device-confirm-bar" class="hidden">
+                        <button class="device-cancel-btn" id="device-cancel-btn">
+                            <i class="fa-solid fa-xmark"></i> Change
+                        </button>
+                        <button class="device-confirm-btn" id="device-confirm-btn">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span id="device-confirm-label">Confirm</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step: Loading Spinner -->
+                <div id="step-loading" class="hidden">
+                    <div class="loader-wrap">
+                        <div class="netflix-spinner"></div>
+                        <p class="loader-text" id="loader-text">Verifying with Netflix...</p>
+                    </div>
+                </div>
+
+                <!-- Step 3A: Phone Result -->
+                <div id="step-phone-result" class="hidden">
+                    <div class="result-box">
+                        <div class="result-header">
+                            <span class="result-badge success"><i class="fa-solid fa-check"></i></span>
+                            <span class="result-title">Login Link Ready</span>
+                        </div>
+                        <div class="result-body">
+                            <p class="result-desc">Choose whether to open the Netflix login link directly or copy it. <strong>Note: The link and CDK can only be used once.</strong></p>
+                            <div class="result-actions-wrap" style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                                <a href="#" target="_blank" class="copy-link-big-btn" id="open-link-btn" style="text-decoration: none; display: flex; align-items: center; justify-content: center; background: #e50914; margin: 0;">
+                                    <i class="fa-solid fa-arrow-up-right-from-square" style="margin-right: 8px;"></i>
+                                    <span>Open Login Link</span>
+                                </a>
+                                <button class="copy-link-big-btn" id="copy-link-btn" style="margin: 0;">
+                                    <i class="fa-solid fa-copy"></i>
+                                    <span id="copy-btn-label">Copy Login Link</span>
+                                </button>
+                            </div>
+                            <p class="burn-notice hidden" id="burn-notice">
+                                <i class="fa-solid fa-circle-check"></i> Link activated! Your CDK is now marked as used.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Step 3B: TV Code Input -->
+                <div id="step-tv-code" class="hidden">
+                    <div class="tv-code-box">
+                        <div class="tv-code-header">
+                            <i class="fa-solid fa-tv tv-code-icon"></i>
+                            <div>
+                                <p class="tv-code-title">Enter TV Screen Code</p>
+                                <p class="tv-code-hint">Open Netflix on your TV → select <strong>Sign In</strong> → a code appears on screen</p>
+                            </div>
+                        </div>
+                        <div class="pin-input-container" id="pin-container">
+                            <input type="text" maxlength="1" class="pin-box" data-index="0" autocomplete="off">
+                            <input type="text" maxlength="1" class="pin-box" data-index="1" autocomplete="off">
+                            <input type="text" maxlength="1" class="pin-box" data-index="2" autocomplete="off">
+                            <input type="text" maxlength="1" class="pin-box" data-index="3" autocomplete="off">
+                            <span class="pin-dash">-</span>
+                            <input type="text" maxlength="1" class="pin-box" data-index="4" autocomplete="off">
+                            <input type="text" maxlength="1" class="pin-box" data-index="5" autocomplete="off">
+                            <input type="text" maxlength="1" class="pin-box" data-index="6" autocomplete="off">
+                            <input type="text" maxlength="1" class="pin-box" data-index="7" autocomplete="off">
+                        </div>
+                        <button class="action-btn hidden" id="tv-activate-btn">
+                            <i class="fa-solid fa-tv btn-icon"></i>
+                            <span class="btn-label">Activate TV Now</span>
+                            <span class="btn-spinner hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Step 4: TV Activated -->
+                <div id="step-tv-success" class="hidden">
+                    <div class="result-box">
+                        <div class="result-header">
+                            <span class="result-badge success"><i class="fa-solid fa-tv"></i></span>
+                            <span class="result-title">Smart TV Connected!</span>
+                        </div>
+                        <div class="result-body" style="text-align: center;">
+                            <p style="font-size: 14px; font-weight: 700; color: var(--success); margin-bottom: 12px;">
+                                <i class="fa-solid fa-circle-check"></i> Your TV screen is now logged in!
+                            </p>
+                            <div class="tcd-wrap">
+                                <span class="tcd-label">Activated TV Code</span>
+                                <div class="tcd-value" id="tcd-value">——</div>
+                            </div>
+                            <p class="result-desc" style="margin-top: 14px; margin-bottom: 0;">
+                                Netflix has been activated directly on your TV. You can now start watching!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Back button (shown after step 2+) -->
+                <button class="back-link hidden" id="back-btn">
+                    <i class="fa-solid fa-arrow-left"></i> Start over
+                </button>
+
+            </div><!-- /panel-redeem -->
+
+            <!-- ══ TAB: VERIFY ══ -->
+            <div class="tab-panel hidden" id="panel-verify">
+                <div class="field-group">
+                    <label class="field-label">CDK Keys <span class="label-hint">— one per line</span></label>
+                    <textarea id="bulk-input" class="bulk-textarea" rows="5" placeholder="NETVXL-A1B2C3-D4E5F6&#10;NETVXL-G7H8I9-J0K1L2" spellcheck="false"></textarea>
+                </div>
+                <button class="action-btn" id="bulk-btn">
+                    <i class="fa-solid fa-magnifying-glass btn-icon"></i>
+                    <span class="btn-label">Check All Keys</span>
+                    <span class="btn-spinner hidden"><i class="fa-solid fa-circle-notch fa-spin"></i></span>
+                </button>
+
+                <div id="bulk-results" class="hidden">
+                    <div class="bulk-summary-header">
+                        <div class="bulk-summary" id="bulk-summary"></div>
+                        <button class="copy-all-btn hidden" id="copy-all-btn" title="Copy all working keys">
+                            <i class="fa-solid fa-copy"></i>
+                        </button>
+                        <button class="copy-all-btn hidden" id="download-txt-btn" title="Download working keys as .txt file" style="margin-left: 6px;">
+                            <i class="fa-solid fa-download"></i>
+                        </button>
+                    </div>
+                    <div class="bulk-table-wrap">
+                        <table class="bulk-table">
+                            <thead><tr><th>#</th><th>Key</th><th>Plan</th><th>Status</th><th>Activation Date</th><th>Warranty Duration</th></tr></thead>
+                            <tbody id="bulk-tbody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div><!-- /.card -->
+
+        <!-- Instructions -->
+        <section class="instructions">
+            <p class="inst-heading">HOW TO USE</p>
+            <div class="inst-cards" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                
+                <!-- Card 1: iPhone -->
+                <div class="inst-card">
+                    <div class="inst-card-header">
+                        <span class="inst-card-icon"><i class="fa-brands fa-apple"></i></span>
+                        <span class="inst-card-title">iPhone / iOS</span>
+                    </div>
+                    <ol class="inst-steps">
+                        <li><strong style="color: var(--red);">[Safari ONLY]</strong> You must access our website using Safari browser.</li>
+                        <li>Enter your CDK code and click Verify.</li>
+                        <li>Choose Phone / Tablet.</li>
+                        <li>Click "Open Login Link" or copy and paste it into Safari.</li>
+                        <li>The Netflix app will open and log in automatically.</li>
+                    </ol>
+                </div>
+
+                <!-- Card 2: Android -->
+                <div class="inst-card">
+                    <div class="inst-card-header">
+                        <span class="inst-card-icon"><i class="fa-brands fa-android"></i></span>
+                        <span class="inst-card-title">Android Phone</span>
+                    </div>
+                    <ol class="inst-steps">
+                        <li>Update both the Netflix app and Chrome browser to the latest version on your phone.</li>
+                        <li>Enter your CDK code and click Verify.</li>
+                        <li>Choose Phone / Tablet.</li>
+                        <li>Click Open Netflix or copy the link to Chrome browser.</li>
+                        <li>Click "Open App" if prompted to log in automatically.</li>
+                    </ol>
+                </div>
+
+                <!-- Card 3: PC & Smart TV -->
+                <div class="inst-card">
+                    <div class="inst-card-header">
+                        <span class="inst-card-icon"><i class="fa-solid fa-desktop"></i></span>
+                        <span class="inst-card-title">PC & Smart TV</span>
+                    </div>
+                    <ol class="inst-steps">
+                        <li><strong>PC:</strong> Copy the link and open it in Chrome/Safari to log in automatically.</li>
+                        <li><strong>Smart TV:</strong> Open Netflix on TV -> Sign In -> Get code.</li>
+                        <li>Select "Smart TV" on our website, enter the TV screen code, and click Activate.</li>
+                    </ol>
+                </div>
+
+            </div>
+        </section>
+
+    </div><!-- /.page-wrap -->
+
+    <!-- API Documentation Modal -->
+    <div id="api-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="modal-header">
+                <div class="modal-title"><i class="fa-solid fa-code"></i> System API Documentation</div>
+                <button id="api-modal-close" class="modal-close-btn"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <p class="api-intro">Integrate your application, website, or bot with our Netflix CDK system using clean REST endpoints.</p>
+                
+                <!-- Endpoint 1 -->
+                <div class="api-endpoint-card">
+                    <div class="api-ep-header">
+                        <span class="api-method get">GET</span>
+                        <span class="api-url">/api/status</span>
+                    </div>
+                    <p class="api-ep-desc">Check if active subscription slots are available in the system.</p>
+                </div>
+
+                <!-- Endpoint 2 -->
+                <div class="api-endpoint-card">
+                    <div class="api-ep-header">
+                        <span class="api-method post">POST</span>
+                        <span class="api-url">/api/check-cdk</span>
+                    </div>
+                    <p class="api-ep-desc">Verify a CDK activation code and retrieve its plan type before redeeming.</p>
+                    <div class="api-code-block">
+                        <div class="acb-label">Request Body</div>
+                        <pre><code>{ "key": "NETVXL-XXXX-XXXX" }</code></pre>
+                    </div>
+                </div>
+
+                <!-- Endpoint 3 -->
+                <div class="api-endpoint-card">
+                    <div class="api-ep-header">
+                        <span class="api-method post">POST</span>
+                        <span class="api-url">/api/redeem</span>
+                    </div>
+                    <p class="api-ep-desc">Redeem a CDK key for Phone/Tablet, PC/Laptop, or background Smart TV activation.</p>
+                    <div class="api-code-block">
+                        <div class="acb-label">Request Body (Phone / Tablet)</div>
+                        <pre><code>{ "key": "NETVXL-XXXX-XXXX", "deviceType": "phone" }</code></pre>
+                    </div>
+                    <div class="api-code-block" style="margin-top: 8px;">
+                        <div class="acb-label">Request Body (PC / Laptop)</div>
+                        <pre><code>{ "key": "NETVXL-XXXX-XXXX", "deviceType": "pc" }</code></pre>
+                    </div>
+                    <div class="api-code-block" style="margin-top: 8px;">
+                        <div class="acb-label">Request Body (Smart TV)</div>
+                        <pre><code>{ "key": "NETVXL-XXXX-XXXX", "tvCode": "12345678" }</code></pre>
+                    </div>
+                </div>
+
+                <!-- Endpoint 4 -->
+                <div class="api-endpoint-card">
+                    <div class="api-ep-header">
+                        <span class="api-method get">GET</span>
+                        <span class="api-url">/l/:code</span>
+                    </div>
+                    <p class="api-ep-desc">Single-use masked redirection URL. Destroys itself upon single use to protect credentials.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="toast" class="toast hidden"></div>
+
+    <!-- Telegram Floating Links -->
+    <div class="telegram-float">
+        <a href="https://t.me/VXL_STORE_V1" target="_blank" class="tg-btn tg-channel" title="Channel">
+            <i class="fa-brands fa-telegram"></i>
+            <span>Channel</span>
+        </a>
+        <a href="https://t.me/V_X_L1" target="_blank" class="tg-btn tg-admin" title="OWNER">
+            <i class="fa-brands fa-telegram"></i>
+            <span>OWNER</span>
+        </a>
+    </div>
+
+    <script src="app.js?v=2.2"></script>
+</body>
+</html>
