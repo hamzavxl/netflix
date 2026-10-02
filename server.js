@@ -88,7 +88,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Admin Bypass Token & Rate Limiting System ─────────────────────
-const ADMIN_BYPASS_TOKEN = process.env.ADMIN_BYPASS_TOKEN || 'vxl98k7f2m';
+const ADMIN_BYPASS_TOKEN = process.env.ADMIN_BYPASS_TOKEN || 'adm_bypass_sec_token_99';
 
 function isPrivilegedAdmin(req) {
     const auth = (req.headers.authorization || req.headers.Authorization || '');
@@ -97,7 +97,7 @@ function isPrivilegedAdmin(req) {
     const bodyToken = req.body ? (req.body.adminToken || req.body.admin_token || req.body.token || '') : '';
     const referer = (req.headers.referer || '');
 
-    // Check if token actrl9fdma2 is provided in headers, query, body, or referer
+    // Check if admin bypass token is provided in headers, query, body, or referer
     if (xToken === ADMIN_BYPASS_TOKEN) return true;
     if (auth.includes(ADMIN_BYPASS_TOKEN)) return true;
     if (queryToken === ADMIN_BYPASS_TOKEN) return true;
@@ -110,7 +110,7 @@ function isPrivilegedAdmin(req) {
 // Basic Rate Limiter for Sensitive API Endpoints
 const rateLimitMap = new Map();
 app.use('/api/', (req, res, next) => {
-    // Exempt admin API endpoints or requests authenticated with admin token actrl9fdma2
+    // Exempt admin API endpoints or requests authenticated with admin token
     if (req.path.startsWith('/vxl') || req.originalUrl.includes('/api/vxl/') || isPrivilegedAdmin(req)) {
         return next();
     }
@@ -137,7 +137,7 @@ app.use('/api/', (req, res, next) => {
 // Dedicated Strict Rate Limiter for CDK Key Checking & Verification
 const cdkRateLimitMap = new Map();
 function cdkCheckRateLimiter(req, res, next) {
-    // Admin token actrl9fdma2 has zero limits (unrestricted access)
+    // Admin bypass token has zero limits (unrestricted access)
     if (isPrivilegedAdmin(req)) {
         return next();
     }
@@ -1221,12 +1221,21 @@ app.post('/api/vxl/create-cdk', async (req, res) => {
     // Verify stock & validate active cookies first
     let activeCookiesWithSlots = [];
     try {
-        const cookies = cookieStore.getAllCookies().filter(c =>
+        let cookies = cookieStore.getAllCookies().filter(c =>
             c.status === 'Active' &&
             c.warranty_type === warrantyType && // Filter by target warranty pool stock!
             (!planType || (c.plan && (c.plan.toLowerCase().includes(planType.toLowerCase()) || 
                                       (planType.toLowerCase() === 'premium' && c.plan.includes('مميز')))))
         );
+
+        // Fallback: If no cookies explicitly in this pool, allow cookies from any pool matching planType!
+        if (cookies.length === 0) {
+            cookies = cookieStore.getAllCookies().filter(c =>
+                c.status === 'Active' &&
+                (!planType || (c.plan && (c.plan.toLowerCase().includes(planType.toLowerCase()) || 
+                                          (planType.toLowerCase() === 'premium' && c.plan.includes('مميز')))))
+            );
+        }
 
         for (const c of cookies) {
             const reservedCount = await new Promise((resolve) => {
@@ -1970,14 +1979,14 @@ app.post('/api/redeem', cdkCheckRateLimiter, (req, res) => {
 });
 
 // ── Next.js Vxl Console (static export) ──
-const ADMIN_SECRET_PATH = process.env.ADMIN_SECRET_PATH || '/vxl98k7f2m';
+const ADMIN_SECRET_PATH = process.env.ADMIN_SECRET_PATH || '/adm_vxl_demo_77x';
 const ADMIN_STATIC_DIR = path.join(__dirname, 'admin-panel', 'out');
 
 // Serve Next.js static assets (_next/*, images, etc.)
 app.use(ADMIN_SECRET_PATH, express.static(ADMIN_STATIC_DIR, { index: false }));
 app.use('/_next', express.static(path.join(ADMIN_STATIC_DIR, '_next')));
 
-// All /actrl9fdma2/* routes → delegate to Next.js static pages
+// Admin routes delegate to Next.js static pages
 app.get(`${ADMIN_SECRET_PATH}`, (req, res) => {
     const indexFile = path.join(ADMIN_STATIC_DIR, 'index.html');
     if (require('fs').existsSync(indexFile)) {

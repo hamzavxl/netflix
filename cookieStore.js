@@ -169,7 +169,10 @@ async function findAndValidateCookie(planType, warrantyType, validateFn) {
     const db = require('./db');
     const pool = warrantyType || '1_month';
     
-    const all = getAllCookies().filter(c => c.warranty_type === pool);
+    let all = getAllCookies().filter(c => c.warranty_type === pool);
+    if (all.length === 0) {
+        all = getAllCookies();
+    }
     const eligible = [];
     for (const c of all) {
         if (await isCookieEligible(c, planType)) {

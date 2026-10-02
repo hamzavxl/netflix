@@ -1496,10 +1496,9 @@ function parseAndFormatBillingDate(str) {
 /* ─── NAVIGATION ─────────────────────────────────────── */
 const PG_META={dashboard:{title:'Dashboard',sub:'System overview and analytics'},cookies:{title:'Cookie Management',sub:'Manage Netflix account cookies'},cdks:{title:'CDK Keys',sub:'Generate and manage activation keys'},admins:{title:'Vxl Users',sub:'Manage panel access'},settings:{title:'Settings',sub:'Connection and security configuration'}};
 function goPage(pg,el){
-  // Redirect settings to dedicated Next.js page
-  if(pg==='settings'){window.location.href='/actrl9fdma2/dashboard/settings/';return;}
-  // Redirect cookies to dedicated Next.js page when not on root
-  if(window.location.pathname !== '/' && window.location.pathname !== '/actrl9fdma2/' && pg==='cookies'){window.location.href='/actrl9fdma2/dashboard/cookies/';return;}
+  const basePath = (window.location.pathname.split('/').filter(Boolean)[0] ? '/' + window.location.pathname.split('/').filter(Boolean)[0] : '');
+  if(pg==='settings'){window.location.href = basePath + '/dashboard/settings/';return;}
+  if(window.location.pathname !== '/' && !window.location.pathname.endsWith('.html') && pg==='cookies'){window.location.href = basePath + '/dashboard/cookies/';return;}
   CUR=pg;
   // Always set hash relative to root to avoid /dashboard/settings/#cookies style URLs
   history.replaceState(null, '', location.pathname.replace(/#.*$/,'') + '#' + pg);
