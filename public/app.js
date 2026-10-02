@@ -630,8 +630,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-/* ═══════ LUXURY REPEATING NETFLIX LOGO ANIMATED WALLPAPER ═══════ */
-(function initNetflixRepeatingBackground() {
+/* ═══════ CINEMATIC FLOATING NETFLIX LOGOS BACKGROUND ═══════ */
+(function initNetflixFloatingBackground() {
     function start() {
         const canvas = document.getElementById('nf-ambient-canvas');
         if (!canvas) return;
@@ -640,7 +640,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let width = 0, height = 0, dpr = 1;
         let mouseX = -9999, mouseY = -9999;
-        let curMouseX = -9999, curMouseY = -9999;
 
         function resize() {
             dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -649,9 +648,9 @@ document.addEventListener('DOMContentLoaded', () => {
             canvas.width = Math.floor(width * dpr);
             canvas.height = Math.floor(height * dpr);
             ctx.scale(dpr, dpr);
+            initParticles();
         }
         window.addEventListener('resize', resize);
-        resize();
 
         window.addEventListener('mousemove', (e) => {
             mouseX = e.clientX;
@@ -663,34 +662,56 @@ document.addEventListener('DOMContentLoaded', () => {
             mouseY = -9999;
         });
 
-        // Grid parameters for repeating Netflix logo
-        const colSpacing = 92;
-        const rowSpacing = 118;
-        const logoWidth = 28;
-        const logoHeight = 46;
+        const particles = [];
+        const BASE_WIDTH = 26;
+        const BASE_HEIGHT = 44;
 
-        let patternOffsetX = 0;
-        let patternOffsetY = 0;
+        function createParticle(randomY = true) {
+            const scale = 0.55 + Math.random() * 0.7; // 3D depth variation
+            return {
+                x: Math.random() * (width || window.innerWidth || 1200),
+                y: randomY ? Math.random() * (height || window.innerHeight || 800) : ((height || 800) + 50),
+                scale: scale,
+                w: BASE_WIDTH * scale,
+                h: BASE_HEIGHT * scale,
+                vx: (Math.random() - 0.5) * 0.45,
+                vy: -(0.32 + Math.random() * 0.48) * scale,
+                rotation: (Math.random() - 0.5) * 0.35,
+                rotSpeed: (Math.random() - 0.5) * 0.003,
+                wobblePhase: Math.random() * Math.PI * 2,
+                wobbleSpeed: 0.012 + Math.random() * 0.015,
+                alpha: 0.09 + scale * 0.11 // Visible at all times, no mouse dependency
+            };
+        }
 
-        function drawNetflixLogo(x, y, alpha, isHovered) {
+        function initParticles() {
+            particles.length = 0;
+            const w = width || window.innerWidth || 1200;
+            const h = height || window.innerHeight || 800;
+            const count = Math.max(18, Math.min(34, Math.floor((w * h) / 48000)));
+            for (let i = 0; i < count; i++) {
+                particles.push(createParticle(true));
+            }
+        }
+
+        function drawNetflixLogo(p) {
             ctx.save();
-            ctx.translate(x, y);
-            ctx.globalAlpha = alpha;
+            ctx.translate(p.x, p.y);
+            ctx.rotate(p.rotation);
+            ctx.globalAlpha = p.alpha;
 
-            const w = logoWidth;
-            const h = logoHeight;
+            const w = p.w;
+            const h = p.h;
             const barW = w * 0.28;
 
-            if (isHovered) {
-                ctx.shadowColor = 'rgba(229, 9, 20, 0.6)';
-                ctx.shadowBlur = 10;
-            }
+            ctx.shadowColor = 'rgba(229, 9, 20, 0.45)';
+            ctx.shadowBlur = 6 * p.scale;
 
-            // Left vertical column
+            // Left vertical bar
             ctx.fillStyle = '#8b060d';
             ctx.fillRect(-w / 2, -h / 2, barW, h);
 
-            // Right vertical column
+            // Right vertical bar
             ctx.fillStyle = '#8b060d';
             ctx.fillRect(w / 2 - barW, -h / 2, barW, h);
 
@@ -698,7 +719,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const grad = ctx.createLinearGradient(-w / 2, -h / 2, w / 2, h / 2);
             grad.addColorStop(0, '#e50914');
             grad.addColorStop(0.5, '#ce0812');
-            grad.addColorStop(1, '#80050c');
+            grad.addColorStop(1, '#85050c');
             ctx.fillStyle = grad;
 
             ctx.beginPath();
@@ -708,12 +729,6 @@ document.addEventListener('DOMContentLoaded', () => {
             ctx.lineTo(w / 2 - barW, h / 2);
             ctx.closePath();
             ctx.fill();
-
-            if (isHovered) {
-                ctx.strokeStyle = 'rgba(255, 60, 60, 0.45)';
-                ctx.lineWidth = 0.7;
-                ctx.stroke();
-            }
 
             ctx.restore();
         }
@@ -731,56 +746,49 @@ document.addEventListener('DOMContentLoaded', () => {
 
             ctx.clearRect(0, 0, width, height);
 
-            // Smooth mouse tracking
-            if (mouseX !== -9999) {
-                curMouseX += (mouseX - curMouseX) * 0.08;
-                curMouseY += (mouseY - curMouseY) * 0.08;
-            }
+            for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
 
-            // Continuous luxury drift motion
-            patternOffsetX += 0.24;
-            patternOffsetY += 0.16;
+                // Organic float with sine wave drift
+                p.wobblePhase += p.wobbleSpeed;
+                p.x += p.vx + Math.sin(p.wobblePhase) * 0.35;
+                p.y += p.vy + Math.cos(p.wobblePhase * 0.7) * 0.15;
+                p.rotation += p.rotSpeed;
 
-            if (patternOffsetX >= colSpacing) patternOffsetX -= colSpacing;
-            if (patternOffsetY >= rowSpacing) patternOffsetY -= rowSpacing;
-
-            // Draw repeating pattern of Netflix logos
-            const startCol = -1;
-            const endCol = Math.ceil(width / colSpacing) + 1;
-            const startRow = -1;
-            const endRow = Math.ceil(height / rowSpacing) + 1;
-
-            const hoverRadius = 240;
-
-            for (let c = startCol; c <= endCol; c++) {
-                const x = c * colSpacing + patternOffsetX;
-                const colStagger = (c % 2 === 0) ? 0 : (rowSpacing / 2);
-
-                for (let r = startRow; r <= endRow; r++) {
-                    const y = r * rowSpacing + colStagger + patternOffsetY;
-
-                    let alpha = 0.045; // Base elegant dark watermark
-                    let isHovered = false;
-
-                    if (curMouseX !== -9999) {
-                        const dx = x - curMouseX;
-                        const dy = y - curMouseY;
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-
-                        if (dist < hoverRadius) {
-                            const intensity = 1 - (dist / hoverRadius);
-                            alpha = 0.045 + intensity * 0.095;
-                            isHovered = intensity > 0.35;
-                        }
+                // Subtle organic drift if mouse passes nearby
+                if (mouseX !== -9999) {
+                    const dx = p.x - mouseX;
+                    const dy = p.y - mouseY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    if (dist < 140 && dist > 1) {
+                        const force = (1 - dist / 140) * 0.8;
+                        p.x += (dx / dist) * force;
+                        p.y += (dy / dist) * force;
                     }
-
-                    drawNetflixLogo(x, y, alpha, isHovered);
                 }
+
+                // Seamless screen wrap
+                const margin = 70;
+                if (p.y < -margin) {
+                    p.y = height + margin;
+                    p.x = Math.random() * width;
+                } else if (p.y > height + margin) {
+                    p.y = -margin;
+                    p.x = Math.random() * width;
+                }
+                if (p.x < -margin) {
+                    p.x = width + margin;
+                } else if (p.x > width + margin) {
+                    p.x = -margin;
+                }
+
+                drawNetflixLogo(p);
             }
 
             requestAnimationFrame(animate);
         }
 
+        resize();
         requestAnimationFrame(animate);
     }
 
