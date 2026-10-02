@@ -3,7 +3,7 @@
  * Netflix-themed animated emojis for NETVXL Bot
  *
  * Usage in HTML parse_mode messages:
- *   ce('fire')  →  <tg-emoji emoji-id="5773790684420361225">🔥</tg-emoji>
+ *   ce('fire')  →  <tg-emoji emoji-id="5773790684420361225"></tg-emoji>
  *
  * Falls back to regular emoji for non-Premium users automatically.
  */
@@ -12,48 +12,48 @@
 // These are from Telegram's built-in animated emoji packs
 const EMOJI_MAP = {
     // Core Netflix/Streaming
-    netflix:     { id: '5237699328522921681', fallback: '🎬' }, // Clapperboard
-    tv:          { id: '5368324170671202286', fallback: '📺' }, // TV
-    play:        { id: '5373141891321020908', fallback: '▶️' }, // Play button
-    crown:       { id: '5371862875350312556', fallback: '👑' }, // Premium Crown
-    diamond:     { id: '5434205371143692640', fallback: '💎' }, // Diamond
-    star:        { id: '5368324170671202286', fallback: '⭐' }, // Star
+    netflix:     { id: '5237699328522921681', fallback: '' }, // Clapperboard
+    tv:          { id: '5368324170671202286', fallback: '' }, // TV
+    play:        { id: '5373141891321020908', fallback: '▶' }, // Play button
+    crown:       { id: '5371862875350312556', fallback: '' }, // Premium Crown
+    diamond:     { id: '5434205371143692640', fallback: '' }, // Diamond
+    star:        { id: '5368324170671202286', fallback: '' }, // Star
 
     // Status Icons
-    active:      { id: '5287399242813702049', fallback: '🟢' }, // Green circle
-    expired:     { id: '5287399242813702049', fallback: '🔴' }, // Red circle
-    fire:        { id: '5773790684420361225', fallback: '🔥' }, // Fire
-    check:       { id: '5377855756482607120', fallback: '✅' }, // Check
-    cross:       { id: '5382210502665158440', fallback: '❌' }, // Cross
-    warning:     { id: '5367867912225213290', fallback: '⚠️' }, // Warning
-    info:        { id: '5372872823904081067', fallback: 'ℹ️' }, // Info
-    lock:        { id: '5373107619886432864', fallback: '🔐' }, // Lock
+    active:      { id: '5287399242813702049', fallback: '' }, // Green circle
+    expired:     { id: '5287399242813702049', fallback: '' }, // Red circle
+    fire:        { id: '5773790684420361225', fallback: '' }, // Fire
+    check:       { id: '5377855756482607120', fallback: '' }, // Check
+    cross:       { id: '5382210502665158440', fallback: '' }, // Cross
+    warning:     { id: '5367867912225213290', fallback: '' }, // Warning
+    info:        { id: '5372872823904081067', fallback: 'ℹ' }, // Info
+    lock:        { id: '5373107619886432864', fallback: '' }, // Lock
 
     // Management
-    key:         { id: '5372888565419418038', fallback: '🔑' }, // Key
-    cookie:      { id: '5373010218445595220', fallback: '🍪' }, // Cookie
-    gift:        { id: '5373010218445595220', fallback: '🎁' }, // Gift
-    settings:    { id: '5370869711888741447', fallback: '⚙️' }, // Settings
-    users:       { id: '5373141891321020908', fallback: '👥' }, // Users
-    stats:       { id: '5368324170671202286', fallback: '📊' }, // Stats
-    list:        { id: '5373107619886432864', fallback: '📋' }, // List
-    search:      { id: '5373141891321020908', fallback: '🔍' }, // Search
-    trash:       { id: '5382210502665158440', fallback: '🗑️' }, // Trash
-    back:        { id: '5373107619886432864', fallback: '⬅️' }, // Back
+    key:         { id: '5372888565419418038', fallback: '' }, // Key
+    cookie:      { id: '5373010218445595220', fallback: '' }, // Cookie
+    gift:        { id: '5373010218445595220', fallback: '' }, // Gift
+    settings:    { id: '5370869711888741447', fallback: '' }, // Settings
+    users:       { id: '5373141891321020908', fallback: '' }, // Users
+    stats:       { id: '5368324170671202286', fallback: '' }, // Stats
+    list:        { id: '5373107619886432864', fallback: '' }, // List
+    search:      { id: '5373141891321020908', fallback: '' }, // Search
+    trash:       { id: '5382210502665158440', fallback: '' }, // Trash
+    back:        { id: '5373107619886432864', fallback: '⬅' }, // Back
 
     // Misc
-    clock:       { id: '5368324170671202286', fallback: '⏳' }, // Hourglass
-    calendar:    { id: '5368324170671202286', fallback: '📅' }, // Calendar
-    email:       { id: '5373107619886432864', fallback: '📧' }, // Email
-    shield:      { id: '5434205371143692640', fallback: '🛡️' }, // Shield
-    rocket:      { id: '5773790684420361225', fallback: '🚀' }, // Rocket
-    wave:        { id: '5373141891321020908', fallback: '👋' }, // Wave
-    sparkle:     { id: '5368324170671202286', fallback: '✨' }, // Sparkle
+    clock:       { id: '5368324170671202286', fallback: '' }, // Hourglass
+    calendar:    { id: '5368324170671202286', fallback: '' }, // Calendar
+    email:       { id: '5373107619886432864', fallback: '' }, // Email
+    shield:      { id: '5434205371143692640', fallback: '' }, // Shield
+    rocket:      { id: '5773790684420361225', fallback: '' }, // Rocket
+    wave:        { id: '5373141891321020908', fallback: '' }, // Wave
+    sparkle:     { id: '5368324170671202286', fallback: '' }, // Sparkle
 
     // Numbers / Indicators
-    dot_red:     { id: '5287399242813702049', fallback: '🔴' },
-    dot_green:   { id: '5287399242813702049', fallback: '🟢' },
-    dot_orange:  { id: '5287399242813702049', fallback: '🟡' },
+    dot_red:     { id: '5287399242813702049', fallback: '' },
+    dot_green:   { id: '5287399242813702049', fallback: '' },
+    dot_orange:  { id: '5287399242813702049', fallback: '' },
 };
 
 /**
@@ -62,18 +62,11 @@ const EMOJI_MAP = {
  * @returns {string} HTML custom emoji tag
  */
 function ce(name) {
-    const e = EMOJI_MAP[name];
-    if (!e) return name; // fallback: return name as-is
-    return `<tg-emoji emoji-id="${e.id}">${e.fallback}</tg-emoji>`;
+    return '';
 }
 
-/**
- * Generate multiple custom emojis as a space-separated string
- * @param {...string} names - emoji names
- * @returns {string}
- */
 function ces(...names) {
-    return names.map(n => ce(n)).join('');
+    return '';
 }
 
 /**

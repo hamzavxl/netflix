@@ -11,7 +11,7 @@ function init() {
         if (err) {
             console.error('[DB] SQLite connection error:', err.message);
         } else {
-            console.log('[DB] ✅ SQLite connection successful!');
+            console.log('[DB]  SQLite connection successful!');
         }
     });
 }
@@ -163,8 +163,8 @@ async function createTables() {
          sqliteDb.run(`INSERT OR IGNORE INTO settings (key,value) VALUES ('proxy_url','')`);
          sqliteDb.run(`INSERT OR IGNORE INTO settings (key,value) VALUES ('proxy_enabled','0')`);
          sqliteDb.run(`INSERT OR IGNORE INTO settings (key,value) VALUES ('proxy_max_retries','3')`);
-         sqliteDb.run(`INSERT OR IGNORE INTO settings (key,value) VALUES ('telegram_channel_id', process.env.TELEGRAM_CHANNEL_ID || '@VXL_STORE_V1')`);
-         sqliteDb.run(`INSERT OR IGNORE INTO settings (key,value) VALUES ('customer_bot_token', process.env.CUSTOMER_BOT_TOKEN || '')`);
+         sqliteDb.run("INSERT OR IGNORE INTO settings (key,value) VALUES ('telegram_channel_id', ?)", [process.env.TELEGRAM_CHANNEL_ID || '@VXL_STORE_V1']);
+         sqliteDb.run("INSERT OR IGNORE INTO settings (key,value) VALUES ('customer_bot_token', ?)", [process.env.CUSTOMER_BOT_TOKEN || '']);
      });
  }
 

@@ -1407,7 +1407,7 @@ app.get('/l/:code', (req, res) => {
                             <path d="M16 4h12v56H16V4z" fill="#E50914"/>
                             <path d="M36 4h12v56H36V4z" fill="#E50914"/>
                         </svg>
-                        <div class="icon">⚠️</div>
+                        <div class="icon"></div>
                         <h2>Link Expired / Already Used</h2>
                         <p>This secure redirection link has already been used or has expired. Please request a new link from the redemption panel.</p>
                     </div>
@@ -1430,7 +1430,7 @@ app.get('/l/:code', (req, res) => {
             // IP mismatch — could be Burp/proxy interception attempt
             console.log('[Security] IP mismatch on /l/:code - stored:', row.locked_ip, 'current:', clientIp);
             db.run("DELETE FROM redirects WHERE code = ?", [cleanCode]); // burn the token
-            return res.status(403).send(`<!DOCTYPE html><html><head><title>Access Denied</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{background:#0a0a0a;color:#f5f5f5;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}</style></head><body><div><h2 style="color:#e50914">🔒 Access Denied</h2><p>Security violation detected. This link has been invalidated.<br><small style="color:#666">Request originated from a different network.</small></p></div></body></html>`);
+            return res.status(403).send(`<!DOCTYPE html><html><head><title>Access Denied</title><meta name="viewport" content="width=device-width,initial-scale=1"><style>body{background:#0a0a0a;color:#f5f5f5;font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;text-align:center}</style></head><body><div><h2 style="color:#e50914"> Access Denied</h2><p>Security violation detected. This link has been invalidated.<br><small style="color:#666">Request originated from a different network.</small></p></div></body></html>`);
         }
 
         // Delete record immediately to prevent second load
@@ -2487,11 +2487,13 @@ initAesKey().then(() => {
         console.log(`Redemption Page: http://localhost:${PORT}/`);
         console.log(`=======================================================`);
 
-        // Auto-start Telegram Bot in the same process
-        try {
-            require('./bot.js');
-        } catch (e) {
-            console.error("Failed to start Telegram Bot:", e.message);
+        // Auto-start Telegram Bot in the same process only if explicitly requested
+        if (process.env.START_BOT_WITH_SERVER === 'true') {
+            try {
+                require('./bot.js');
+            } catch (e) {
+                console.error("Failed to start Telegram Bot:", e.message);
+            }
         }
     });
 });

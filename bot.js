@@ -307,7 +307,7 @@ function qtyKb(lang) {
     return { inline_keyboard: [
         [{ text:'1',callback_data:'qty:1'},{ text:'5',callback_data:'qty:5'},{ text:'10',callback_data:'qty:10'}],
         [{ text:'25',callback_data:'qty:25'},{ text:'50',callback_data:'qty:50'},
-         { text:`✏️ ${lang==='ar'?'مخصص':lang==='fr'?'Personnalisé':'Custom'}`, callback_data:'qty:custom'}],
+         { text:` ${lang==='ar'?'مخصص':lang==='fr'?'Personnalisé':'Custom'}`, callback_data:'qty:custom'}],
         [{ text:t(lang,'btn_back_cdk'), callback_data:'cdk:create'}],
     ]};
 }
@@ -321,9 +321,9 @@ function autoCheckKb(lang) {
 }
 function langKb() {
     return { inline_keyboard: [
-        [{ text:'🇬🇧 English',   callback_data:'lang:en' }],
-        [{ text:'🇸🇦 العربية',   callback_data:'lang:ar' }],
-        [{ text:'🇫🇷 Français',  callback_data:'lang:fr' }],
+        [{ text:' English',   callback_data:'lang:en' }],
+        [{ text:' العربية',   callback_data:'lang:ar' }],
+        [{ text:' Français',  callback_data:'lang:fr' }],
     ]};
 }
 function confirmKb(lang, yes, no) {
@@ -393,7 +393,7 @@ bot.on('callback_query', async q => {
     const msgId  = q.message.message_id;
     const action = q.data;
     const role   = await getUserRole(chatId);
-    if (!role) { bot.answerCallbackQuery(q.id,{text:'🚫'}); return; }
+    if (!role) { bot.answerCallbackQuery(q.id,{text:''}); return; }
     bot.answerCallbackQuery(q.id);
 
     const lang = await getLang();
@@ -675,7 +675,7 @@ bot.on('callback_query', async q => {
             return;
         }
         const lines = rows.map(r => {
-            const icon = r.status === 'unused' ? '🟢' : (r.status === 'active' ? '🔵' : '🔴');
+            const icon = r.status === 'unused' ? '' : (r.status === 'active' ? '' : '');
             const statusLabel = r.status === 'unused' ? (lang === 'ar' ? 'صالح (غير مستعمل)' : 'Valid (Unused)')
                               : (r.status === 'active' ? (lang === 'ar' ? 'مفعّل (مستعمل)' : 'Active (Used)')
                               : (lang === 'ar' ? 'منتهي الصلاحية' : 'Expired'));
@@ -771,7 +771,7 @@ bot.on('callback_query', async q => {
         const buttons = rows.map((c, index) => {
             const planLbl = planLabel(c.plan, lang);
             const poolLbl = poolLabel(c.warranty_type, lang);
-            const statusIcon = c.status === 'Active' ? '🟢' : '🔴';
+            const statusIcon = c.status === 'Active' ? '' : '';
             return [{
                 text: `${statusIcon} ${c.email} (${planLbl}) [${poolLbl}] (${c.active_users || 0}/${c.max_users || 5})`,
                 callback_data: `cookindiv:manage:${index}`
@@ -898,7 +898,7 @@ bot.on('callback_query', async q => {
             await showManageCookiePage(chatId, cm, index, lang, s);
         } catch (err) {
             console.error(err);
-            await bot.sendMessage(chatId, "🔴 *Developer Debug Error:* " + err.stack, { parse_mode: 'Markdown' });
+            await bot.sendMessage(chatId, " *Developer Debug Error:* " + err.stack, { parse_mode: 'Markdown' });
         }
         return;
     }
@@ -917,7 +917,7 @@ bot.on('callback_query', async q => {
             });
         } catch (err) {
             console.error(err);
-            await bot.sendMessage(chatId, "🔴 *Developer Debug Error (slots):* " + err.stack, { parse_mode: 'Markdown' });
+            await bot.sendMessage(chatId, " *Developer Debug Error (slots):* " + err.stack, { parse_mode: 'Markdown' });
         }
         return;
     }
@@ -941,7 +941,7 @@ bot.on('callback_query', async q => {
             });
         } catch (err) {
             console.error(err);
-            await bot.sendMessage(chatId, "🔴 *Developer Debug Error (pool):* " + err.stack, { parse_mode: 'Markdown' });
+            await bot.sendMessage(chatId, " *Developer Debug Error (pool):* " + err.stack, { parse_mode: 'Markdown' });
         }
         return;
     }
@@ -965,7 +965,7 @@ bot.on('callback_query', async q => {
             await showManageCookiePage(chatId, cm, index, lang, s);
         } catch (err) {
             console.error(err);
-            await bot.sendMessage(chatId, "🔴 *Developer Debug Error (update_pool):* " + err.stack, { parse_mode: 'Markdown' });
+            await bot.sendMessage(chatId, " *Developer Debug Error (update_pool):* " + err.stack, { parse_mode: 'Markdown' });
         }
         return;
     }
@@ -1019,7 +1019,7 @@ bot.on('callback_query', async q => {
             }
         } catch (err) {
             console.error(err);
-            await bot.sendMessage(chatId, "🔴 *Developer Debug Error (verify):* " + err.stack, { parse_mode: 'Markdown' });
+            await bot.sendMessage(chatId, " *Developer Debug Error (verify):* " + err.stack, { parse_mode: 'Markdown' });
         }
         return;
     }
@@ -1045,7 +1045,7 @@ bot.on('callback_query', async q => {
             });
         } catch (err) {
             console.error(err);
-            await bot.sendMessage(chatId, "🔴 *Developer Debug Error (del):* " + err.stack, { parse_mode: 'Markdown' });
+            await bot.sendMessage(chatId, " *Developer Debug Error (del):* " + err.stack, { parse_mode: 'Markdown' });
         }
         return;
     }
@@ -1068,7 +1068,7 @@ bot.on('callback_query', async q => {
             await showCookieStatsPage(chatId, cm, lang, s);
         } catch (err) {
             console.error(err);
-            await bot.sendMessage(chatId, "🔴 *Developer Debug Error (del_conf):* " + err.stack, { parse_mode: 'Markdown' });
+            await bot.sendMessage(chatId, " *Developer Debug Error (del_conf):* " + err.stack, { parse_mode: 'Markdown' });
         }
         return;
     }
@@ -1256,7 +1256,7 @@ bot.on('message', async msg => {
                     {parse_mode:'Markdown',reply_markup:backCdkKb(lang)});
                 return;
             }
-            const icon   = row.status === 'unused' ? '🟢' : (row.status === 'active' ? '🔵' : '🔴');
+            const icon   = row.status === 'unused' ? '' : (row.status === 'active' ? '' : '');
             const status = row.status === 'unused' ? (lang === 'ar' ? 'صالح (غير مستعمل)' : 'Valid (Unused)')
                          : (row.status === 'active' ? (lang === 'ar' ? 'مفعّل (مستعمل)' : 'Active (Used)')
                          : (lang === 'ar' ? 'منتهي الصلاحية' : 'Expired'));
@@ -1512,7 +1512,7 @@ async function importCookies(chatId, rawTexts, sourceName, warrantyType='1_month
         
         try {
             const isSoon = isExpiringSoon(info.billing);
-            const warnText = isSoon ? (lang === 'ar' ? ' ⚠️ (ينتهي قريباً!)' : ' ⚠️ (Expiring Soon!)') : '';
+            const warnText = isSoon ? (lang === 'ar' ? '  (ينتهي قريباً!)' : '  (Expiring Soon!)') : '';
             const existing = cookieStore.getCookie(info.email);
             if (existing) {
                 existing.cookie_text = cookieStr;
@@ -1523,7 +1523,7 @@ async function importCookies(chatId, rawTexts, sourceName, warrantyType='1_month
                 existing.warranty_type = warrantyType;
                 existing.last_checked = new Date().toISOString();
                 cookieStore.saveCookie(info.email, existing);
-                replaced++; replacedList.push(`  ♻️ ${info.email}${warnText}`);
+                replaced++; replacedList.push(`   ${info.email}${warnText}`);
             } else {
                 cookieStore.saveCookie(info.email, {
                     email: info.email,
@@ -1537,7 +1537,7 @@ async function importCookies(chatId, rawTexts, sourceName, warrantyType='1_month
                     warranty_type: warrantyType,
                     last_checked: new Date().toISOString()
                 });
-                added++; addedList.push(`  ✅ ${info.email} (${info.plan||'?'})${warnText}`);
+                added++; addedList.push(`   ${info.email} (${info.plan||'?'})${warnText}`);
             }
         } catch (_){ failed++; }
     }
@@ -1562,7 +1562,7 @@ async function doGenerateKeys(chatId, count, s, consoleMsgId, lang) {
     const cookieEmail = s.cookieEmail || null;
 
     if (consoleMsgId) {
-        await bot.editMessageText(lang === 'ar' ? '⏳ *جاري فحص الحسابات للتأكد من صلاحيتها أولاً...*' : '⏳ *Checking accounts to ensure validity first...*', {
+        await bot.editMessageText(lang === 'ar' ? ' *جاري فحص الحسابات للتأكد من صلاحيتها أولاً...*' : ' *Checking accounts to ensure validity first...*', {
             chat_id: chatId,
             message_id: consoleMsgId,
             parse_mode: 'Markdown'
@@ -1644,7 +1644,7 @@ async function doGenerateKeys(chatId, count, s, consoleMsgId, lang) {
 
     let keysFormatted = '';
     if (count > 10) {
-        keysFormatted = `📁 *Generated ${count} CDK keys and attached them as a .txt file below for easy export.*`;
+        keysFormatted = ` *Generated ${count} CDK keys and attached them as a .txt file below for easy export.*`;
     } else {
         keysFormatted = `\`\`\`copy\n${keys.join('\n')}\n\`\`\``;
     }
@@ -1896,7 +1896,7 @@ async function runCookieCheck(reportChatId = null, reportMsgId = null, lang = 'e
     const progressInterval = (reportChatId && reportMsgId) ? setInterval(async () => {
         try {
             await bot.editMessageText(
-                `⏳ Checking cookies... ${checked}/${total} done`,
+                ` Checking cookies... ${checked}/${total} done`,
                 { chat_id: reportChatId, message_id: reportMsgId }
             );
         } catch (_) {}
@@ -2069,7 +2069,7 @@ async function showCookieStatsPage(chatId, cm, lang, s) {
     const buttons = rows.map((c, index) => {
         const planLbl = planLabel(c.plan, lang);
         const poolLbl = poolLabel(c.warranty_type, lang);
-        const statusIcon = c.status === 'Active' ? '🟢' : '🔴';
+        const statusIcon = c.status === 'Active' ? '' : '';
         return [{
             text: `${statusIcon} ${c.email} (${planLbl}) [${poolLbl}] (${c.active_users || 0}/${c.max_users || 5})`,
             callback_data: `cookindiv:manage:${index}`
@@ -2125,11 +2125,11 @@ function detectTelegramLang(telegramUser) {
 
 
 function getJoinChannelBtnText(lang) {
-    if (lang === 'ar') return '📢 انضم إلى القناة';
-    if (lang === 'fr') return '📢 Rejoindre le canal';
-    if (lang === 'zh') return '📢 加入频道';
-    if (lang === 'ru') return '📢 Подписаться на канал';
-    return '📢 Join Channel';
+    if (lang === 'ar') return ' انضم إلى القناة';
+    if (lang === 'fr') return ' Rejoindre le canal';
+    if (lang === 'zh') return ' 加入频道';
+    if (lang === 'ru') return ' Подписаться на канал';
+    return ' Join Channel';
 }
 
 
@@ -2234,7 +2234,7 @@ function setupCustomerBotHandlers() {
             await dbRun("UPDATE bot_users SET is_member = 0 WHERE chat_id = ?", [String(chatId)]);
             const cleanChannel = channelId.replace('@', '');
             const channelLink = `https://t.me/${cleanChannel}`;
-            const text = t(userLang, 'cust_join_channel', { channel: channelLink }) + `\n\n⚠️ <i>(Verification error: Ensure bot is admin in ${channelId})</i>`;
+            const text = t(userLang, 'cust_join_channel', { channel: channelLink }) + `\n\n <i>(Verification error: Ensure bot is admin in ${channelId})</i>`;
             const keyboard = {
                 inline_keyboard: [
                     [{ text: getJoinChannelBtnText(userLang), url: channelLink }],
@@ -2352,9 +2352,9 @@ function setupCustomerBotHandlers() {
             // Show Language Selection first
             const keyboard = {
                 inline_keyboard: [
-                    [{ text: '🇸🇦 العربية', callback_data: 'lang:ar' }, { text: '🇬🇧 English', callback_data: 'lang:en' }],
-                    [{ text: '🇫🇷 Français', callback_data: 'lang:fr' }, { text: '🇨🇳 中文', callback_data: 'lang:zh' }],
-                    [{ text: '🇷🇺 Русский', callback_data: 'lang:ru' }]
+                    [{ text: ' العربية', callback_data: 'lang:ar' }, { text: ' English', callback_data: 'lang:en' }],
+                    [{ text: ' Français', callback_data: 'lang:fr' }, { text: ' 中文', callback_data: 'lang:zh' }],
+                    [{ text: ' Русский', callback_data: 'lang:ru' }]
                 ]
             };
             await customerBot.sendMessage(chatId, t('en', 'cust_select_lang'), { reply_markup: keyboard });
@@ -2364,9 +2364,9 @@ function setupCustomerBotHandlers() {
             if (!user.lang) {
                 const keyboard = {
                     inline_keyboard: [
-                        [{ text: '🇸🇦 العربية', callback_data: 'lang:ar' }, { text: '🇬🇧 English', callback_data: 'lang:en' }],
-                        [{ text: '🇫🇷 Français', callback_data: 'lang:fr' }, { text: '🇨🇳 中文', callback_data: 'lang:zh' }],
-                        [{ text: '🇷🇺 Русский', callback_data: 'lang:ru' }]
+                        [{ text: ' العربية', callback_data: 'lang:ar' }, { text: ' English', callback_data: 'lang:en' }],
+                        [{ text: ' Français', callback_data: 'lang:fr' }, { text: ' 中文', callback_data: 'lang:zh' }],
+                        [{ text: ' Русский', callback_data: 'lang:ru' }]
                     ]
                 };
                 await customerBot.sendMessage(chatId, t('en', 'cust_select_lang'), { reply_markup: keyboard });
@@ -2495,9 +2495,9 @@ function setupCustomerBotHandlers() {
         if (action === 'cust:change_lang') {
             const keyboard = {
                 inline_keyboard: [
-                    [{ text: '🇸🇦 العربية', callback_data: 'lang:ar' }, { text: '🇬🇧 English', callback_data: 'lang:en' }],
-                    [{ text: '🇫🇷 Français', callback_data: 'lang:fr' }, { text: '🇨🇳 中文', callback_data: 'lang:zh' }],
-                    [{ text: '🇷🇺 Русский', callback_data: 'lang:ru' }],
+                    [{ text: ' العربية', callback_data: 'lang:ar' }, { text: ' English', callback_data: 'lang:en' }],
+                    [{ text: ' Français', callback_data: 'lang:fr' }, { text: ' 中文', callback_data: 'lang:zh' }],
+                    [{ text: ' Русский', callback_data: 'lang:ru' }],
                     [{ text: t(userLang, 'cust_btn_back'), callback_data: 'cust:back_to_menu' }]
                 ]
             };
