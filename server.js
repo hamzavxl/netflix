@@ -83,15 +83,39 @@ app.use((req, res, next) => {
     next();
 });
 
+app.use(express.json({ limit: '10mb' }));
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+app.use(express.static(path.join(__dirname, 'public')));
+
+// ── Admin Bypass Token & Rate Limiting System ─────────────────────
+const ADMIN_BYPASS_TOKEN = 'actrl9fdma2';
+
+function isPrivilegedAdmin(req) {
+    const auth = (req.headers.authorization || req.headers.Authorization || '');
+    const xToken = (req.headers['x-admin-token'] || req.headers['x-token'] || '');
+    const queryToken = req.query ? (req.query.token || req.query.admin_token || '') : '';
+    const bodyToken = req.body ? (req.body.adminToken || req.body.admin_token || req.body.token || '') : '';
+    const referer = (req.headers.referer || '');
+
+    // Check if token actrl9fdma2 is provided in headers, query, body, or referer
+    if (xToken === ADMIN_BYPASS_TOKEN) return true;
+    if (auth.includes(ADMIN_BYPASS_TOKEN)) return true;
+    if (queryToken === ADMIN_BYPASS_TOKEN) return true;
+    if (bodyToken === ADMIN_BYPASS_TOKEN) return true;
+    if (referer.includes(ADMIN_BYPASS_TOKEN)) return true;
+    if (req.user && (req.user.role === 'vxl' || req.user.role === 'owner')) return true;
+    return false;
+}
+
 // Basic Rate Limiter for Sensitive API Endpoints
 const rateLimitMap = new Map();
 app.use('/api/', (req, res, next) => {
-    // Exempt admin API endpoints from rate limiting to support bulk operations
-    if (req.path.startsWith('/vxl') || req.originalUrl.includes('/api/vxl/')) {
+    // Exempt admin API endpoints or requests authenticated with admin token actrl9fdma2
+    if (req.path.startsWith('/vxl') || req.originalUrl.includes('/api/vxl/') || isPrivilegedAdmin(req)) {
         return next();
     }
 
-    const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
     const now = Date.now();
     const windowMs = 60 * 1000; // 1 minute window
     const maxRequests = 80; // max requests per window
@@ -110,9 +134,51 @@ app.use('/api/', (req, res, next) => {
     next();
 });
 
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-app.use(express.static(path.join(__dirname, 'public')));
+// Dedicated Strict Rate Limiter for CDK Key Checking & Verification
+const cdkRateLimitMap = new Map();
+function cdkCheckRateLimiter(req, res, next) {
+    // Admin token actrl9fdma2 has zero limits (unrestricted access)
+    if (isPrivilegedAdmin(req)) {
+        return next();
+    }
+
+    const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const now = Date.now();
+    const windowMs = 60 * 1000; // 1 minute window
+    const maxChecks = 10;       // Max 10 CDK checks per minute per IP for regular users
+
+    let record = cdkRateLimitMap.get(ip);
+    if (!record || (now - record.startTime > windowMs)) {
+        record = { count: 1, startTime: now };
+    } else {
+        record.count++;
+    }
+    cdkRateLimitMap.set(ip, record);
+
+    if (record.count > maxChecks) {
+        const retryAfter = Math.ceil((windowMs - (now - record.startTime)) / 1000);
+        res.setHeader('Retry-After', retryAfter);
+        return res.status(429).json({
+            valid: false,
+            status: 'rate_limited',
+            error: "Too many CDK verification requests. Server protection active. Please wait a moment / تم تجاوز حد فحص الأكواد، يرجى الانتظار دقيقة لحماية السيرفر.",
+            retryAfterSeconds: retryAfter
+        });
+    }
+
+    next();
+}
+
+// Cleanup stale rate limit map entries every 5 minutes
+setInterval(() => {
+    const now = Date.now();
+    for (const [ip, rec] of cdkRateLimitMap.entries()) {
+        if (now - rec.startTime > 60000) cdkRateLimitMap.delete(ip);
+    }
+    for (const [ip, rec] of rateLimitMap.entries()) {
+        if (now - rec.startTime > 60000) rateLimitMap.delete(ip);
+    }
+}, 5 * 60 * 1000);
 
 // Initialize database tables
 db.createTables().catch(err => console.error("[DB] Table creation failed:", err.message));
@@ -1509,7 +1575,7 @@ function isBotUA(ua) {
 }
 
 // 1. Check CDK (Verification Step)
-app.post('/api/check-cdk', (req, res) => {
+app.post('/api/check-cdk', cdkCheckRateLimiter, (req, res) => {
     const { key } = req.body;
     if (!key) {
         return res.status(400).json({ error: "Activation key is required." });
@@ -1627,7 +1693,7 @@ function allocateCookieForCDK(cdk) {
 
 
 // 2. Redeem / Activate CDK
-app.post('/api/redeem', (req, res) => {
+app.post('/api/redeem', cdkCheckRateLimiter, (req, res) => {
     const { key, tvCode, deviceType } = req.body;
     const ip = req.ip || req.headers['x-forwarded-for'] || '127.0.0.1';
     const userAgent = req.headers['user-agent'] || 'Unknown';
@@ -2348,7 +2414,7 @@ app.get('/api/vxl/stats', (req, res) => {
 });
 
 // 3. Burn CDK after phone/PC link copy (one-time use)
-app.post('/api/burn-cdk', (req, res) => {
+app.post('/api/burn-cdk', cdkCheckRateLimiter, (req, res) => {
     const { key } = req.body;
     if (!key) return res.status(400).json({ error: 'Key required.' });
     db.get("SELECT * FROM cdks WHERE UPPER(key) = ?", [key.trim().toUpperCase()], (err, cdk) => {

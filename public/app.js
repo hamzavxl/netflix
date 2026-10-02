@@ -469,8 +469,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const results = await Promise.all(keys.map(async (key, idx) => {
             try {
+                const headers = {'Content-Type':'application/json'};
+                const admT = localStorage.getItem('nvx_t');
+                if (admT) headers['Authorization'] = 'Bearer ' + admT;
                 const res  = await fetch('/api/check-cdk', {
-                    method:'POST', headers:{'Content-Type':'application/json'},
+                    method:'POST', headers,
                     body: JSON.stringify({ key })
                 });
                 const data = await res.json();
@@ -503,7 +506,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             let pill;
-            if (isUnused) {
+            if (d.status === 'rate_limited') {
+                pill = '<span class="status-pill warn" style="background: rgba(234,179,8,0.15); color: #eab308; border: 1px solid rgba(234,179,8,0.3);"><i class="fa-solid fa-clock"></i> Rate Limited</span>';
+            } else if (isUnused) {
                 pill = '<span class="status-pill ok"><i class="fa-solid fa-check"></i> Unused</span>';
                 workingKeys.push(r.key);
             } else if (isUsed) {
