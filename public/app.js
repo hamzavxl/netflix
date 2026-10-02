@@ -630,8 +630,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-/* ═══════ CINEMATIC FLOATING NETFLIX LOGOS BACKGROUND ═══════ */
-(function initNetflixFloatingBackground() {
+/* ═══════ ORGANIZED KINETIC STREAMS OF NETFLIX LOGOS ═══════ */
+(function initNetflixOrganizedStreamsBackground() {
     function start() {
         const canvas = document.getElementById('nf-ambient-canvas');
         if (!canvas) return;
@@ -640,6 +640,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         let width = 0, height = 0, dpr = 1;
         let mouseX = -9999, mouseY = -9999;
+        let animTime = 0;
 
         function resize() {
             dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -648,7 +649,7 @@ document.addEventListener('DOMContentLoaded', () => {
             canvas.width = Math.floor(width * dpr);
             canvas.height = Math.floor(height * dpr);
             ctx.scale(dpr, dpr);
-            initParticles();
+            setupLanes();
         }
         window.addEventListener('resize', resize);
 
@@ -662,56 +663,53 @@ document.addEventListener('DOMContentLoaded', () => {
             mouseY = -9999;
         });
 
-        const particles = [];
-        const BASE_WIDTH = 26;
-        const BASE_HEIGHT = 44;
+        const lanes = [];
+        const BASE_WIDTH = 28;
+        const BASE_HEIGHT = 46;
+        const ITEM_GAP = 165; // Balanced vertical spacing
 
-        function createParticle(randomY = true) {
-            const scale = 0.55 + Math.random() * 0.7; // 3D depth variation
-            return {
-                x: Math.random() * (width || window.innerWidth || 1200),
-                y: randomY ? Math.random() * (height || window.innerHeight || 800) : ((height || 800) + 50),
-                scale: scale,
-                w: BASE_WIDTH * scale,
-                h: BASE_HEIGHT * scale,
-                vx: (Math.random() - 0.5) * 0.45,
-                vy: -(0.32 + Math.random() * 0.48) * scale,
-                rotation: (Math.random() - 0.5) * 0.35,
-                rotSpeed: (Math.random() - 0.5) * 0.003,
-                wobblePhase: Math.random() * Math.PI * 2,
-                wobbleSpeed: 0.012 + Math.random() * 0.015,
-                alpha: 0.09 + scale * 0.11 // Visible at all times, no mouse dependency
-            };
-        }
+        function setupLanes() {
+            lanes.length = 0;
+            const laneCount = Math.max(5, Math.min(12, Math.floor(width / 135)));
+            const laneWidth = width / laneCount;
 
-        function initParticles() {
-            particles.length = 0;
-            const w = width || window.innerWidth || 1200;
-            const h = height || window.innerHeight || 800;
-            const count = Math.max(18, Math.min(34, Math.floor((w * h) / 48000)));
-            for (let i = 0; i < count; i++) {
-                particles.push(createParticle(true));
+            for (let c = 0; c < laneCount; c++) {
+                const isEven = (c % 2 === 0);
+                lanes.push({
+                    x: (c + 0.5) * laneWidth,
+                    offsetY: (c * 67) % ITEM_GAP,
+                    // Alternating organized flow: even lanes float UP, odd lanes float DOWN
+                    direction: isEven ? -1 : 1,
+                    speed: isEven ? 0.44 : 0.36,
+                    scale: isEven ? 0.92 : 0.76,
+                    baseAlpha: isEven ? 0.14 : 0.085,
+                    swayPhase: c * 0.9
+                });
             }
         }
 
-        function drawNetflixLogo(p) {
+        function drawNetflixLogo(x, y, scale, alpha, isHovered) {
             ctx.save();
-            ctx.translate(p.x, p.y);
-            ctx.rotate(p.rotation);
-            ctx.globalAlpha = p.alpha;
+            ctx.translate(x, y);
+            ctx.globalAlpha = alpha;
 
-            const w = p.w;
-            const h = p.h;
+            const w = BASE_WIDTH * scale;
+            const h = BASE_HEIGHT * scale;
             const barW = w * 0.28;
 
-            ctx.shadowColor = 'rgba(229, 9, 20, 0.45)';
-            ctx.shadowBlur = 6 * p.scale;
+            if (isHovered) {
+                ctx.shadowColor = 'rgba(229, 9, 20, 0.7)';
+                ctx.shadowBlur = 12 * scale;
+            } else {
+                ctx.shadowColor = 'rgba(229, 9, 20, 0.4)';
+                ctx.shadowBlur = 6 * scale;
+            }
 
-            // Left vertical bar
+            // Left vertical column
             ctx.fillStyle = '#8b060d';
             ctx.fillRect(-w / 2, -h / 2, barW, h);
 
-            // Right vertical bar
+            // Right vertical column
             ctx.fillStyle = '#8b060d';
             ctx.fillRect(w / 2 - barW, -h / 2, barW, h);
 
@@ -745,44 +743,45 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             ctx.clearRect(0, 0, width, height);
+            animTime += 0.015;
 
-            for (let i = 0; i < particles.length; i++) {
-                const p = particles[i];
+            const itemsPerLane = Math.ceil(height / ITEM_GAP) + 2;
 
-                // Organic float with sine wave drift
-                p.wobblePhase += p.wobbleSpeed;
-                p.x += p.vx + Math.sin(p.wobblePhase) * 0.35;
-                p.y += p.vy + Math.cos(p.wobblePhase * 0.7) * 0.15;
-                p.rotation += p.rotSpeed;
+            for (let i = 0; i < lanes.length; i++) {
+                const lane = lanes[i];
 
-                // Subtle organic drift if mouse passes nearby
-                if (mouseX !== -9999) {
-                    const dx = p.x - mouseX;
-                    const dy = p.y - mouseY;
-                    const dist = Math.sqrt(dx * dx + dy * dy);
-                    if (dist < 140 && dist > 1) {
-                        const force = (1 - dist / 140) * 0.8;
-                        p.x += (dx / dist) * force;
-                        p.y += (dy / dist) * force;
+                // Continuous smooth organized drift
+                lane.offsetY += lane.direction * lane.speed;
+
+                // Subtle fluid micro-sway (3px max) keeping strict lane order
+                const swayX = Math.sin(animTime + lane.swayPhase) * 3;
+                const laneX = lane.x + swayX;
+
+                for (let j = -1; j <= itemsPerLane; j++) {
+                    let y = j * ITEM_GAP + (lane.offsetY % ITEM_GAP);
+
+                    // Normalize y within visible range plus padding
+                    const totalSpan = (itemsPerLane + 2) * ITEM_GAP;
+                    while (y < -ITEM_GAP) y += totalSpan;
+                    while (y > height + ITEM_GAP) y -= totalSpan;
+
+                    // Hover interaction
+                    let alpha = lane.baseAlpha;
+                    let isHovered = false;
+
+                    if (mouseX !== -9999) {
+                        const dx = laneX - mouseX;
+                        const dy = y - mouseY;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < 120) {
+                            const intensity = 1 - (dist / 120);
+                            alpha = lane.baseAlpha + intensity * 0.12;
+                            isHovered = intensity > 0.4;
+                        }
                     }
-                }
 
-                // Seamless screen wrap
-                const margin = 70;
-                if (p.y < -margin) {
-                    p.y = height + margin;
-                    p.x = Math.random() * width;
-                } else if (p.y > height + margin) {
-                    p.y = -margin;
-                    p.x = Math.random() * width;
+                    drawNetflixLogo(laneX, y, lane.scale, alpha, isHovered);
                 }
-                if (p.x < -margin) {
-                    p.x = width + margin;
-                } else if (p.x > width + margin) {
-                    p.x = -margin;
-                }
-
-                drawNetflixLogo(p);
             }
 
             requestAnimationFrame(animate);
