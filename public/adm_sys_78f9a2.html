@@ -581,6 +581,12 @@ select.inp option{background:var(--bg2);color:var(--t1)}
         </div>
         <span class="ni-label">Settings</span>
       </div>
+      <div class="nav-item vxl-logout-btn" onclick="doLogout()" style="color:#f87171;margin-top:6px;cursor:pointer">
+        <div class="ni-icon" style="color:#ef4444">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+        </div>
+        <span class="ni-label">Logout</span>
+      </div>
     </div>
   </div>
 
@@ -1383,8 +1389,14 @@ async function doLogin() {
   finally{btn.innerHTML=orig;btn.disabled=false;}
 }
 document.getElementById('l-pass').onkeydown=e=>{if(e.key==='Enter')doLogin()};
-document.getElementById('l-user').onkeydown=e=>{if(e.key==='Enter')document.getElementById('l-pass').focus()};
-function doLogout(){localStorage.removeItem('nvx_t');TOKEN='';location.reload();}
+async function doLogout(){
+  if(window.customConfirm && !(await window.customConfirm("Are you sure you want to sign out?", "Sign Out"))) return;
+  localStorage.removeItem('nvx_t');
+  localStorage.removeItem('nvx_user');
+  localStorage.removeItem('nvx_role');
+  TOKEN='';
+  location.reload();
+}
 
 /* ─── INIT ───────────────────────────────────────────── */
 async function initApp(){

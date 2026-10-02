@@ -88,7 +88,7 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ── Admin Bypass Token & Rate Limiting System ─────────────────────
-const ADMIN_BYPASS_TOKEN = 'actrl9fdma2';
+const ADMIN_BYPASS_TOKEN = process.env.ADMIN_BYPASS_TOKEN || 'vxl98k7f2m';
 
 function isPrivilegedAdmin(req) {
     const auth = (req.headers.authorization || req.headers.Authorization || '');
@@ -1961,11 +1961,12 @@ app.post('/api/redeem', cdkCheckRateLimiter, (req, res) => {
 });
 
 // ── Next.js Vxl Console (static export) ──
-const ADMIN_SECRET_PATH = process.env.ADMIN_SECRET_PATH || '/actrl9fdma2';
+const ADMIN_SECRET_PATH = process.env.ADMIN_SECRET_PATH || '/vxl98k7f2m';
 const ADMIN_STATIC_DIR = path.join(__dirname, 'admin-panel', 'out');
 
 // Serve Next.js static assets (_next/*, images, etc.)
 app.use(ADMIN_SECRET_PATH, express.static(ADMIN_STATIC_DIR, { index: false }));
+app.use('/_next', express.static(path.join(ADMIN_STATIC_DIR, '_next')));
 
 // All /actrl9fdma2/* routes → delegate to Next.js static pages
 app.get(`${ADMIN_SECRET_PATH}`, (req, res) => {
