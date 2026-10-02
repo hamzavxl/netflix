@@ -1038,6 +1038,10 @@ input, textarea { font-family:var(--font); }
     transition: var(--trans);
 }
 
+.tg-btn.tg-github i {
+    color: #f0f6fc;
+}
+
 .tg-btn:hover {
     background: rgba(229, 9, 20, 0.1);
     border-color: var(--red);
