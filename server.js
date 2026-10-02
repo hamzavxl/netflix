@@ -1977,6 +1977,11 @@ app.get(`${ADMIN_SECRET_PATH}`, (req, res) => {
     }
 });
 
+// Redirect obsolete /dashboard/admins route
+app.get([`${ADMIN_SECRET_PATH}/dashboard/admins`, `${ADMIN_SECRET_PATH}/dashboard/admins/*`], (req, res) => {
+    res.redirect(`${ADMIN_SECRET_PATH}/dashboard/cookies/`);
+});
+
 app.get(`${ADMIN_SECRET_PATH}/*`, (req, res) => {
     // Strip the base path, map to a file in /out
     const sub = req.path.replace(ADMIN_SECRET_PATH, '').replace(/^\//, '');

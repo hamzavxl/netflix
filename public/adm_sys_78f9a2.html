@@ -523,12 +523,6 @@ select.inp option{background:var(--bg2);color:var(--t1)}
     </div>
     <div class="sb-sec">
       <div class="sb-sec-label">Access</div>
-      <div class="nav-item" data-page="admins" onclick="goPage('admins',this)">
-        <div class="ni-icon">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        </div>
-        <span class="ni-label">Admin Users</span>
-      </div>
       <div class="nav-item" data-page="settings" onclick="goPage('settings',this)">
         <div class="ni-icon">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93l-1.41 1.41M4.93 4.93l1.41 1.41M12 2v2m0 16v2m7.07-4.93l-1.41-1.41M4.93 19.07l1.41-1.41M2 12h2m16 0h2"/></svg>
@@ -1057,6 +1051,93 @@ select.inp option{background:var(--bg2);color:var(--t1)}
 <div id="toasts"></div>
 
 <script>
+
+/* ── Custom Dark Mode Confirmation Modal ── */
+function customConfirm(message, title = "Confirm Action") {
+  return new Promise((resolve) => {
+    let overlay = document.getElementById('nvx-confirm-modal');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'nvx-confirm-modal';
+      overlay.style.cssText = `
+        position: fixed; inset: 0; z-index: 100000;
+        background: rgba(0, 0, 0, 0.78);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0; transition: opacity 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      `;
+      document.body.appendChild(overlay);
+    }
+
+    overlay.innerHTML = `
+      <div id="nvx-confirm-box" style="
+        background: #141417;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        box-shadow: 0 25px 50px -12px rgba(0,0,0,0.85), 0 0 0 1px rgba(229,9,20,0.18);
+        width: 90%; max-width: 410px; padding: 24px;
+        transform: scale(0.92);
+        transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: 'Inter', -apple-system, sans-serif;
+        color: #fff;
+      ">
+        <div style="display:flex; align-items:center; gap:12px; margin-bottom:14px;">
+          <div style="
+            width: 40px; height: 40px; border-radius: 10px;
+            background: rgba(229,9,20,0.12); border: 1px solid rgba(229,9,20,0.25);
+            display: flex; align-items: center; justify-content: center;
+            color: #e50914; flex-shrink: 0;
+          ">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+          <div>
+            <div style="font-size:15px; font-weight:700; color:#fff; line-height:1.2;">${title}</div>
+            <div style="font-size:11px; color:#888; margin-top:2px;">Security & Confirmation</div>
+          </div>
+        </div>
+        <div style="font-size:13.5px; color:#aaa; line-height:1.55; margin-bottom:24px; word-break:break-word;">
+          ${message}
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button id="nvx-modal-cancel" style="
+            background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);
+            color: #ddd; padding: 9px 18px; border-radius: 8px; font-size:13px; font-weight:600;
+            cursor: pointer; transition: 0.15s;
+          ">Cancel</button>
+          <button id="nvx-modal-ok" style="
+            background: #e50914; border: 1px solid #ff2b36;
+            color: #fff; padding: 9px 20px; border-radius: 8px; font-size:13px; font-weight:600;
+            cursor: pointer; box-shadow: 0 4px 14px rgba(229,9,20,0.4); transition: 0.15s;
+          ">Confirm</button>
+        </div>
+      </div>
+    `;
+
+    overlay.style.display = 'flex';
+    requestAnimationFrame(() => {
+      overlay.style.opacity = '1';
+      const box = document.getElementById('nvx-confirm-box');
+      if (box) box.style.transform = 'scale(1)';
+    });
+
+    function finish(res) {
+      overlay.style.opacity = '0';
+      const box = document.getElementById('nvx-confirm-box');
+      if (box) box.style.transform = 'scale(0.92)';
+      setTimeout(() => {
+        overlay.style.display = 'none';
+        resolve(res);
+      }, 200);
+    }
+
+    document.getElementById('nvx-modal-cancel').onclick = () => finish(false);
+    document.getElementById('nvx-modal-ok').onclick = () => finish(true);
+    overlay.onclick = (e) => { if (e.target === overlay) finish(false); };
+  });
+}
+window.customConfirm = customConfirm;
+
 // Disable F12 & Inspect Element
 document.addEventListener('contextmenu', e => e.preventDefault());
 document.addEventListener('keydown', e => {
@@ -1465,7 +1546,7 @@ function renderCK(list){
 }
 function changeCkPg(p){ ckPg=p; renderCK(allCK); }
 async function delCk(email){
-  if(!confirm(`Delete cookie for ${email}?`))return;
+  if(!await customConfirm(`Delete cookie for ${email}?`))return;
   const r=await api('DELETE',`/api/admin/cookies/${encodeURIComponent(email)}`);
   if(r.success!==false){toast(`Deleted: ${email}`,'ok');loadCk();}
   else toast(r.error||'Delete failed','err');
@@ -1488,7 +1569,7 @@ async function checkAll(){
   else toast(r.error||'Check failed','err');
 }
 async function resetAllSlots(){
-  if(!confirm("Are you sure you want to reset active slots to 0 for ALL cookies?"))return;
+  if(!await customConfirm("Are you sure you want to reset active slots to 0 for ALL cookies?"))return;
   toast("Resetting active slots for all cookies...", "inf");
   try {
     const r = await api('POST', '/api/vxl/cookies/reset-slots');
@@ -1592,7 +1673,7 @@ async function genCDK(){
 function cpAll(){navigator.clipboard.writeText(document.getElementById('dk-box').textContent);toast('All keys copied','ok');}
 function cp(k){navigator.clipboard.writeText(k);toast('Key copied','ok');}
 async function delCDK(key){
-  if(!confirm(`Delete CDK: ${key}?`))return;
+  if(!await customConfirm(`Delete CDK: ${key}?`))return;
   const r=await api('DELETE',`/api/proxy/cdks/${key}`);
   if(r.success!==false){toast('Deleted','ok');loadCDK();}else toast(r.error||'Failed','err');
 }
