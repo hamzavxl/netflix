@@ -227,10 +227,6 @@ function mainKb(lang, role = 'owner') {
     buttons.push([{ text: t(lang,'btn_cdk'), callback_data:'nav:cdk' }]);
     buttons.push([{ text: t(lang,'btn_cookies'), callback_data:'nav:cookies' }]);
     buttons.push([{ text: t(lang,'btn_settings'), callback_data:'nav:settings' }]);
-    if (role === 'owner') {
-        buttons.push([{ text: t(lang,'btn_users'), callback_data:'nav:users' }]);
-        buttons.push([{ text: t(lang,'admin_btn_analytics'), callback_data:'admin:analytics' }]);
-    }
     return { inline_keyboard: buttons };
 }
 
@@ -1148,11 +1144,11 @@ bot.on('callback_query', async q => {
     }
 
     // ═══════════════════════════════════════════════
-    // USER MANAGEMENT SECTION
+    // DEPRECATED SECTION
     // ═══════════════════════════════════════════════
-    if (action==='nav:users') {
-        await bot.editMessageText(t(lang,'users_title'),
-            {chat_id:chatId,message_id:cm,parse_mode:'Markdown',reply_markup:usersMenuKb(lang)});
+    if (action==='nav:users' || action==='admin:analytics') {
+        try { await bot.answerCallbackQuery(query.id, { text: 'Section removed.' }); } catch(_) {}
+        await showMain(chatId, cm, lang, s);
         return;
     }
 

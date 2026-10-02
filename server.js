@@ -729,7 +729,8 @@ app.post('/api/vxl/check-cookies', async (req, res) => {
             const loc = r.headers['location'] || r.headers['Location'] || '';
             const isInvalidLoc = loc.includes('/login') || loc.includes('Netflix_Logon') || loc.includes('/signup') || loc.includes('/youraccount/payment') || loc.includes('/simplemember') || loc.includes('/hold') || loc.includes('/orderfinal');
             if (isInvalidLoc) {
-                return {valid:false};
+                const isPaywall = loc.includes('/youraccount/payment') || loc.includes('/hold');
+                return { valid: false, reason: isPaywall ? 'paywall' : 'expired' };
             }
             const targetUrl = loc.startsWith('http') ? loc : `https://www.netflix.com${loc}`;
             r = await proxy.httpGet(targetUrl, {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0','Cookie':cookieStr,'Accept-Language':'en-US,en;q=0.9'});
@@ -737,12 +738,11 @@ app.post('/api/vxl/check-cookies', async (req, res) => {
                 allSetCookies.push(...r.headers['set-cookie']);
             }
         }
-        if(r.code===302 || r.body.includes('/login') || r.body.includes('/signup') || r.body.includes('Netflix_Logon')) return {valid:false};
-        const h=r.body;
+        if(r.code===302 || r.body.includes('/login') || r.body.includes('/signup') || r.body.includes('Netflix_Logon')) return { valid: false, reason: 'expired' };
 
         const statusMatch = h.match(/"membershipStatus"\s*:\s*"([^"]+)"/i);
         if (statusMatch && statusMatch[1] !== 'CURRENT_MEMBER') {
-            return {valid:false};
+            return { valid: false, reason: 'paywall', statusVal: statusMatch[1] };
         }
 
         // ── Deep paywall / payment-required detection ──
@@ -1015,6 +1015,15 @@ app.post('/api/vxl/check-cookies', async (req, res) => {
                 failed++;
             }
         }
+
+        // Sort results: Active working accounts strictly first, then Paywall, then Expired/Dead
+        results.sort((a, b) => {
+            if (a.status === 'Active' && b.status !== 'Active') return -1;
+            if (a.status !== 'Active' && b.status === 'Active') return 1;
+            if (a.status === 'Paywall' && b.status !== 'Paywall') return -1;
+            if (a.status !== 'Paywall' && b.status === 'Paywall') return 1;
+            return 0;
+        });
 
         return res.json({
             success: true,
