@@ -871,9 +871,41 @@ app.post('/api/vxl/check-cookies', async (req, res) => {
                     billingDate = `Cancelled: ${rawDate}`;
                 }
             } else {
-                const partnerMatch = h.match(/"partnerDisplayName"\s*:\s*"([^"]+)"/i);
-                if (partnerMatch && partnerMatch[1] && partnerMatch[1] !== 'null') {
-                    billingDate = `Partner: ${decodeEsc(partnerMatch[1])}`;
+                // Partner Telecom Bundle detection
+                const partnerTextMatch = h.match(/Billed through ([^<.,\n"]+) package/i) ||
+                                         h.match(/Billed through ([^<.,\n"]+)/i) ||
+                                         h.match(/Factur[ée] via (?:l'offre |le forfait )?([^<.,\n"]+)/i) ||
+                                         h.match(/Facturado a trav[ée]s de ([^<.,\n"]+)/i) ||
+                                         h.match(/تتم الفوترة من خلال ([^<.,\n"]+)/i);
+                if (partnerTextMatch && partnerTextMatch[1]) {
+                    billingDate = `Partner: ${decodeEsc(partnerTextMatch[1]).trim()}`;
+                } else {
+                    const pmMatch = h.match(/"paymentMethod"[^}]*"value"\s*:\s*"([^"]+)"/i);
+                    if (pmMatch && pmMatch[1]) {
+                        const pm = pmMatch[1].toUpperCase();
+                        if (pm.includes('AIRTEL')) billingDate = 'Partner: Airtel';
+                        else if (pm.includes('JIO')) billingDate = 'Partner: Reliance Jio';
+                        else if (pm.includes('ILIAD') || pm.includes('FREE')) billingDate = 'Partner: Free Telecom';
+                        else if (pm.includes('ORANGE')) billingDate = 'Partner: Orange';
+                        else if (pm.includes('VODAFONE')) billingDate = 'Partner: Vodafone';
+                        else if (pm.includes('SFR')) billingDate = 'Partner: SFR';
+                        else if (pm.includes('BOUY')) billingDate = 'Partner: Bouygues';
+                        else if (pm.includes('TIM')) billingDate = 'Partner: TIM';
+                        else if (pm.includes('CLARO')) billingDate = 'Partner: Claro';
+                        else if (pm.includes('TURK')) billingDate = 'Partner: Turkcell';
+                        else if (pm.includes('TMOBILE') || pm.includes('T_MOBILE')) billingDate = 'Partner: T-Mobile';
+                        else if (pm.includes('PARTNER') || pm.includes('BILLED')) billingDate = `Partner: ${pm.replace(/_BILLED|_PI|_BUNDLE/g, '').toLowerCase()}`;
+                    } else {
+                        const partnerMatch = h.match(/"partnerDisplayName"\s*:\s*"([^"]+)"/i);
+                        if (partnerMatch && partnerMatch[1] && partnerMatch[1] !== 'null') {
+                            billingDate = `Partner: ${decodeEsc(partnerMatch[1])}`;
+                        } else {
+                            const freeTextMatch = h.match(/(?:next bill is on|your next billing date is|renews on|membership ends on)\s*([A-Za-z0-9, ]{3,25})/i);
+                            if (freeTextMatch && freeTextMatch[1]) {
+                                billingDate = freeTextMatch[1].trim();
+                            }
+                        }
+                    }
                 }
             }
         }
