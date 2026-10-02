@@ -434,7 +434,59 @@ select.inp option{background:var(--bg2);color:var(--t1)}
 @keyframes slideOut{from{opacity:1;transform:translateX(0)}to{opacity:0;transform:translateX(30px)}}
 @keyframes spin{to{transform:rotate(360deg)}}
 @keyframes pulseGreen{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,.4)}70%{box-shadow:0 0 0 5px rgba(34,197,94,0)}}
-.spin{animation:spin .8s linear infinite}
+/* ── Sleek Custom Select Dropdown System (Anti-Slop / Netflix Theme) ── */
+.vxl-select-wrap { position: relative; width: 100%; font-family: inherit; user-select: none; }
+.vxl-select-trigger {
+    width: 100%; min-height: 40px; background: var(--bg2, #141417);
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.12)); border-radius: var(--r, 8px);
+    padding: 8px 14px; display: flex; align-items: center; justify-content: space-between;
+    gap: 10px; color: var(--t1, #fff); font-size: 13.5px; cursor: pointer;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); outline: none; box-sizing: border-box;
+}
+.vxl-select-trigger:hover {
+    border-color: rgba(229, 9, 20, 0.5); background: var(--bg3, #18181d);
+    box-shadow: 0 0 12px rgba(229, 9, 20, 0.15);
+}
+.vxl-select-wrap.open .vxl-select-trigger {
+    border-color: var(--red, #e50914);
+    box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.28), 0 0 16px rgba(229, 9, 20, 0.2);
+    background: var(--bg3, #18181d);
+}
+.vxl-st-content {
+    display: flex; align-items: center; gap: 8px; overflow: hidden;
+    text-overflow: ellipsis; white-space: nowrap; flex: 1;
+}
+.vxl-st-label { font-weight: 500; color: var(--t1, #f3f3f3); }
+.vxl-badge {
+    font-size: 11px; padding: 2px 8px; border-radius: 6px; font-weight: 600;
+    display: inline-flex; align-items: center; gap: 4px; letter-spacing: 0.2px;
+}
+.vxl-badge.has-stock {
+    background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.28);
+}
+.vxl-badge.no-stock {
+    background: rgba(255, 255, 255, 0.05); color: #888; border: 1px solid rgba(255, 255, 255, 0.08);
+}
+.vxl-chevron { color: #888; transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), color 0.2s; flex-shrink: 0; }
+.vxl-select-wrap.open .vxl-chevron { transform: rotate(180deg); color: var(--red, #e50914); }
+.vxl-select-menu {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: var(--bg2, #141417); border: 1px solid var(--border, rgba(255, 255, 255, 0.12));
+    border-radius: 10px; box-shadow: 0 20px 45px -8px rgba(0, 0, 0, 0.9), 0 0 0 1px rgba(229, 9, 20, 0.2);
+    padding: 6px; z-index: 99999; max-height: 250px; overflow-y: auto; opacity: 0;
+    transform: translateY(-8px) scale(0.98); pointer-events: none;
+    transition: opacity 0.18s cubic-bezier(0.4, 0, 0.2, 1), transform 0.18s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px);
+}
+.vxl-select-wrap.open .vxl-select-menu { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+.vxl-option {
+    padding: 9px 12px; border-radius: 6px; display: flex; align-items: center;
+    justify-content: space-between; font-size: 13px; color: var(--t2, #ccc); cursor: pointer;
+    transition: background 0.15s, color 0.15s; margin-bottom: 2px;
+}
+.vxl-option:hover { background: rgba(229, 9, 20, 0.14); color: #fff; }
+.vxl-option.selected { background: rgba(229, 9, 20, 0.22); color: #fff; font-weight: 600; }
+.vxl-option.selected .vxl-opt-text::before { content: "✓ "; color: var(--red, #e50914); font-weight: 700; margin-right: 4px; }
 </style>
 </head>
 <body>
@@ -1137,6 +1189,128 @@ function customConfirm(message, title = "Confirm Action") {
   });
 }
 window.customConfirm = customConfirm;
+
+/* ── Custom Select UI/UX Enhancer ── */
+(function() {
+  function parseOptText(text) {
+    const match = text.match(/^(.*?)\s*\(([^)]+)\)$/);
+    if (match) return { label: match[1].trim(), badge: match[2].trim() };
+    return { label: text.trim(), badge: null };
+  }
+
+  function enhanceSelect(select) {
+    if (!select || select.dataset.vxlEnhanced === '1') return;
+    select.dataset.vxlEnhanced = '1';
+    select.style.setProperty('display', 'none', 'important');
+
+    const wrap = document.createElement('div');
+    wrap.className = 'vxl-select-wrap';
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'vxl-select-trigger';
+
+    const triggerContent = document.createElement('div');
+    triggerContent.className = 'vxl-st-content';
+
+    const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    chevron.setAttribute('class', 'vxl-chevron');
+    chevron.setAttribute('width', '14');
+    chevron.setAttribute('height', '14');
+    chevron.setAttribute('viewBox', '0 0 24 24');
+    chevron.setAttribute('fill', 'none');
+    chevron.setAttribute('stroke', 'currentColor');
+    chevron.setAttribute('stroke-width', '2.5');
+    chevron.innerHTML = '<polyline points="6 9 12 15 18 9"></polyline>';
+
+    trigger.appendChild(triggerContent);
+    trigger.appendChild(chevron);
+    wrap.appendChild(trigger);
+
+    const menu = document.createElement('div');
+    menu.className = 'vxl-select-menu';
+    wrap.appendChild(menu);
+
+    function updateOptions() {
+      menu.innerHTML = '';
+      const selectedIndex = select.selectedIndex >= 0 ? select.selectedIndex : 0;
+      const selectedOption = select.options[selectedIndex];
+
+      if (selectedOption) {
+        const { label, badge } = parseOptText(selectedOption.text);
+        const isZero = badge && (badge.includes('0 accounts') || badge.includes('0 seats') || badge.startsWith('0'));
+        triggerContent.innerHTML = `<span class="vxl-st-label">${label}</span>` +
+          (badge ? `<span class="vxl-badge ${isZero ? 'no-stock' : 'has-stock'}">${badge}</span>` : '');
+      }
+
+      Array.from(select.options).forEach((opt, idx) => {
+        const item = document.createElement('div');
+        item.className = 'vxl-option' + (idx === select.selectedIndex ? ' selected' : '');
+        const { label, badge } = parseOptText(opt.text);
+
+        let badgeHtml = '';
+        if (badge) {
+          const isZero = badge.includes('0 accounts') || badge.includes('0 seats') || badge.startsWith('0');
+          badgeHtml = `<span class="vxl-badge ${isZero ? 'no-stock' : 'has-stock'}">${badge}</span>`;
+        }
+
+        item.innerHTML = `<span class="vxl-opt-text">${label}</span>${badgeHtml}`;
+
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          if (select.value !== opt.value) {
+            select.value = opt.value;
+            select.dispatchEvent(new Event('input', { bubbles: true }));
+            select.dispatchEvent(new Event('change', { bubbles: true }));
+          }
+          closeMenu();
+          updateOptions();
+        });
+
+        menu.appendChild(item);
+      });
+    }
+
+    function openMenu() {
+      document.querySelectorAll('.vxl-select-wrap.open').forEach(w => {
+        if (w !== wrap) w.classList.remove('open');
+      });
+      wrap.classList.add('open');
+    }
+
+    function closeMenu() {
+      wrap.classList.remove('open');
+    }
+
+    trigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (wrap.classList.contains('open')) closeMenu();
+      else openMenu();
+    });
+
+    document.addEventListener('click', (e) => {
+      if (!wrap.contains(e.target)) closeMenu();
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeMenu();
+    });
+
+    const observer = new MutationObserver(() => updateOptions());
+    observer.observe(select, { childList: true, subtree: true, attributes: true, attributeFilter: ['value'] });
+    select.addEventListener('change', () => updateOptions());
+
+    select.parentNode.insertBefore(wrap, select);
+    updateOptions();
+  }
+
+  function scan() {
+    document.querySelectorAll('select.inp').forEach(enhanceSelect);
+  }
+
+  setInterval(scan, 500);
+  scan();
+})();
 
 // Disable F12 & Inspect Element
 document.addEventListener('contextmenu', e => e.preventDefault());

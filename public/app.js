@@ -629,3 +629,238 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 });
+
+/* ═══════ AMBIENT NETFLIX BACKGROUND & FLOATING SHARDS ENGINE ═══════ */
+(function initNetflixAmbient() {
+    function start() {
+        const canvas = document.getElementById('nf-ambient-canvas');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return;
+
+        let width = 0, height = 0, dpr = 1;
+        let mouseX = 0, mouseY = 0, targetMouseX = 0, targetMouseY = 0;
+
+        function resize() {
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = Math.floor(width * dpr);
+            canvas.height = Math.floor(height * dpr);
+            ctx.scale(dpr, dpr);
+        }
+        window.addEventListener('resize', resize);
+        resize();
+
+        window.addEventListener('mousemove', (e) => {
+            targetMouseX = (e.clientX - width / 2) * 0.05;
+            targetMouseY = (e.clientY - height / 2) * 0.05;
+        }, { passive: true });
+
+        // Generate Shards (قطع لوجو نيتفلكس وقطع كريستالية حمراء متطايرة)
+        const shards = [];
+        const shardCount = Math.min(24, Math.max(14, Math.floor(width / 65)));
+
+        for (let i = 0; i < shardCount; i++) {
+            const isRibbon = Math.random() > 0.4;
+            const points = [];
+            const radius = Math.random() * 24 + 16;
+            const sides = isRibbon ? 4 : (Math.random() > 0.5 ? 3 : 5);
+            for (let s = 0; s < sides; s++) {
+                const angle = (s / sides) * Math.PI * 2 + (Math.random() * 0.4 - 0.2);
+                const r = isRibbon ? (s % 2 === 0 ? radius * 1.9 : radius * 0.6) : (radius * (0.6 + Math.random() * 0.6));
+                points.push({ x: Math.cos(angle) * r, y: Math.sin(angle) * r });
+            }
+
+            shards.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                vx: (Math.random() - 0.5) * 0.35,
+                vy: -0.22 - Math.random() * 0.38,
+                rot: Math.random() * Math.PI * 2,
+                vRot: (Math.random() - 0.5) * 0.009,
+                scale: 0.65 + Math.random() * 0.65,
+                opacity: 0.12 + Math.random() * 0.18,
+                glow: Math.random() > 0.35,
+                points: points,
+                depth: 0.3 + Math.random() * 0.7,
+                colorType: Math.floor(Math.random() * 3)
+            });
+        }
+
+        // Floating ambient Embers / Sparks
+        const embers = [];
+        const emberCount = 32;
+        for (let i = 0; i < emberCount; i++) {
+            embers.push({
+                x: Math.random() * width,
+                y: Math.random() * height,
+                radius: Math.random() * 1.7 + 0.8,
+                vx: (Math.random() - 0.5) * 0.25,
+                vy: -0.28 - Math.random() * 0.4,
+                alpha: Math.random() * 0.5 + 0.2,
+                fadeSpeed: 0.003 + Math.random() * 0.005,
+                wobble: Math.random() * Math.PI * 2,
+                depth: 0.2 + Math.random() * 0.8
+            });
+        }
+
+        // Draw Ambient Netflix "N" Monogram in background
+        function drawNetflixMonogram(time) {
+            ctx.save();
+            const centerX = width * 0.5 + mouseX * 0.18;
+            const centerY = height * 0.44 + mouseY * 0.18;
+            ctx.translate(centerX, centerY);
+
+            const breathe = Math.sin(time * 0.0007) * 0.035 + 1;
+            const size = Math.min(width, height) * 0.54 * breathe;
+            ctx.scale(size / 300, size / 300);
+
+            const nOpacity = 0.045 + Math.sin(time * 0.0009) * 0.012;
+            ctx.globalAlpha = nOpacity;
+
+            // Left bar
+            ctx.fillStyle = '#b20710';
+            ctx.beginPath();
+            ctx.rect(-70, -140, 42, 280);
+            ctx.fill();
+
+            // Right bar
+            ctx.fillStyle = '#b20710';
+            ctx.beginPath();
+            ctx.rect(28, -140, 42, 280);
+            ctx.fill();
+
+            // Diagonal ribbon with shadow
+            ctx.save();
+            ctx.shadowColor = 'rgba(0,0,0,0.85)';
+            ctx.shadowBlur = 20;
+            ctx.shadowOffsetX = -6;
+            const grad = ctx.createLinearGradient(-70, -140, 70, 140);
+            grad.addColorStop(0, '#e50914');
+            grad.addColorStop(0.5, '#db0000');
+            grad.addColorStop(1, '#831010');
+            ctx.fillStyle = grad;
+
+            ctx.beginPath();
+            ctx.moveTo(-70, -140);
+            ctx.lineTo(-28, -140);
+            ctx.lineTo(70, 140);
+            ctx.lineTo(28, 140);
+            ctx.closePath();
+            ctx.fill();
+            ctx.restore();
+
+            ctx.restore();
+        }
+
+        let isVisible = true;
+        document.addEventListener('visibilitychange', () => {
+            isVisible = !document.hidden;
+        });
+
+        function animate(time) {
+            if (!isVisible) {
+                requestAnimationFrame(animate);
+                return;
+            }
+
+            ctx.clearRect(0, 0, width, height);
+
+            // Smooth mouse follow (lerp)
+            mouseX += (targetMouseX - mouseX) * 0.04;
+            mouseY += (targetMouseY - mouseY) * 0.04;
+
+            // 1. Draw subtle background Netflix Monogram
+            drawNetflixMonogram(time);
+
+            // 2. Draw & Update Embers
+            ctx.save();
+            for (let i = 0; i < embers.length; i++) {
+                const e = embers[i];
+                e.x += e.vx + Math.sin(e.wobble) * 0.3 + mouseX * e.depth * 0.02;
+                e.y += e.vy + mouseY * e.depth * 0.02;
+                e.wobble += 0.02;
+                e.alpha += Math.sin(time * e.fadeSpeed) * 0.01;
+
+                if (e.y < -10) { e.y = height + 10; e.x = Math.random() * width; }
+                if (e.x < -10) e.x = width + 10;
+                if (e.x > width + 10) e.x = -10;
+
+                ctx.fillStyle = `rgba(255, 75, 75, ${Math.max(0.1, Math.min(0.65, e.alpha))})`;
+                ctx.shadowColor = '#e50914';
+                ctx.shadowBlur = 6;
+                ctx.beginPath();
+                ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.restore();
+
+            // 3. Draw & Update Floating Shards (قطع لوجو نيتفلكس المتطايرة)
+            for (let i = 0; i < shards.length; i++) {
+                const s = shards[i];
+                s.x += s.vx + mouseX * s.depth * 0.04;
+                s.y += s.vy + mouseY * s.depth * 0.04;
+                s.rot += s.vRot;
+
+                if (s.y < -60) {
+                    s.y = height + 60;
+                    s.x = Math.random() * width;
+                }
+                if (s.x < -60) s.x = width + 60;
+                if (s.x > width + 60) s.x = -60;
+
+                ctx.save();
+                ctx.translate(s.x, s.y);
+                ctx.rotate(s.rot);
+                ctx.scale(s.scale, s.scale);
+
+                // Create gradient for shard
+                const grad = ctx.createLinearGradient(-30, -30, 30, 30);
+                if (s.colorType === 0) {
+                    grad.addColorStop(0, `rgba(229, 9, 20, ${s.opacity * 1.2})`);
+                    grad.addColorStop(1, `rgba(180, 0, 10, ${s.opacity * 0.4})`);
+                } else if (s.colorType === 1) {
+                    grad.addColorStop(0, `rgba(200, 15, 25, ${s.opacity})`);
+                    grad.addColorStop(1, `rgba(40, 5, 8, ${s.opacity * 0.3})`);
+                } else {
+                    grad.addColorStop(0, `rgba(255, 45, 55, ${s.opacity * 0.95})`);
+                    grad.addColorStop(1, `rgba(130, 10, 15, ${s.opacity * 0.25})`);
+                }
+
+                if (s.glow) {
+                    ctx.shadowColor = 'rgba(229, 9, 20, 0.45)';
+                    ctx.shadowBlur = 12;
+                }
+
+                ctx.beginPath();
+                for (let p = 0; p < s.points.length; p++) {
+                    const pt = s.points[p];
+                    if (p === 0) ctx.moveTo(pt.x, pt.y);
+                    else ctx.lineTo(pt.x, pt.y);
+                }
+                ctx.closePath();
+                ctx.fillStyle = grad;
+                ctx.fill();
+
+                // Crisp luminous outline
+                ctx.strokeStyle = `rgba(255, 80, 80, ${s.opacity * 1.6})`;
+                ctx.lineWidth = 0.8;
+                ctx.stroke();
+
+                ctx.restore();
+            }
+
+            requestAnimationFrame(animate);
+        }
+
+        requestAnimationFrame(animate);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start);
+    } else {
+        start();
+    }
+})();
+

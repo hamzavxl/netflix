@@ -64,37 +64,49 @@ input, textarea { font-family:var(--font); }
 /* ============================================================
    BACKGROUND
    ============================================================ */
-@keyframes gridScroll {
-    from { background-position: 0 0; }
-    to   { background-position: 48px 48px; }
+@keyframes gridDrift {
+    0%   { background-position: 0 0; }
+    50%  { background-position: 24px 36px; }
+    100% { background-position: 48px 48px; }
 }
 
 @keyframes floatBlob1 {
     0%   { transform: translate(0, 0) scale(1); }
-    33%  { transform: translate(30px, 40px) scale(1.05); }
-    66%  { transform: translate(-20px, 20px) scale(0.95); }
+    33%  { transform: translate(35px, 45px) scale(1.08); }
+    66%  { transform: translate(-25px, 25px) scale(0.94); }
     100% { transform: translate(0, 0) scale(1); }
 }
 
 @keyframes floatBlob2 {
     0%   { transform: translate(0, 0) scale(1); }
-    50%  { transform: translate(-40px, -30px) scale(1.1); }
+    50%  { transform: translate(-45px, -35px) scale(1.12); }
     100% { transform: translate(0, 0) scale(1); }
 }
 
 .bg-grid {
     position: fixed; inset: 0;
     background-image:
-        linear-gradient(rgba(229,9,20,0.065) 1px, transparent 1px),
-        linear-gradient(90deg, rgba(229,9,20,0.065) 1px, transparent 1px);
-    background-size: 48px 48px;
+        linear-gradient(rgba(229,9,20,0.055) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(229,9,20,0.055) 1px, transparent 1px);
+    background-size: 50px 50px;
     pointer-events: none; z-index: 0;
-    animation: gridScroll 20s linear infinite;
+    animation: gridDrift 28s ease-in-out infinite alternate;
 }
-.blob { position:fixed; border-radius:50%; filter:blur(120px); pointer-events:none; z-index:0; }
-.b1 { width:600px; height:600px; background:rgba(229,9,20,0.12); top:-250px; left:-200px; animation: floatBlob1 25s infinite ease-in-out; }
-.b2 { width:400px; height:400px; background:rgba(229,9,20,0.06); bottom:-150px; right:-150px; animation: floatBlob2 20s infinite ease-in-out; }
-.b3 { width:350px; height:350px; background:rgba(180,0,10,0.08); top:50%; left:60%; animation: floatBlob1 30s infinite ease-in-out; }
+.blob { position:fixed; border-radius:50%; filter:blur(130px); pointer-events:none; z-index:0; }
+.b1 { width:650px; height:650px; background:radial-gradient(circle, rgba(229,9,20,0.15) 0%, rgba(180,0,10,0.05) 60%, transparent 80%); top:-220px; left:-180px; animation: floatBlob1 24s infinite ease-in-out alternate; }
+.b2 { width:520px; height:520px; background:radial-gradient(circle, rgba(229,9,20,0.11) 0%, rgba(130,0,10,0.03) 60%, transparent 80%); bottom:-120px; right:-120px; animation: floatBlob2 19s infinite ease-in-out alternate; }
+.b3 { width:440px; height:440px; background:radial-gradient(circle, rgba(200,10,25,0.08) 0%, transparent 70%); top:42%; left:58%; animation: floatBlob1 28s infinite ease-in-out alternate; }
+
+/* Ambient Dynamic Canvas for floating Netflix shards & logo */
+.nf-ambient-canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+}
 
 /* ============================================================
    PAGE LAYOUT
