@@ -501,21 +501,39 @@ document.addEventListener('DOMContentLoaded', () => {
         let unusedCount = 0, usedCount = 0, invalidCount = 0;
         const workingKeys = [];
 
-        const results = await Promise.all(keys.map(async (key, idx) => {
-            try {
-                const headers = {'Content-Type':'application/json'};
-                const admT = localStorage.getItem('nvx_t');
-                if (admT) headers['Authorization'] = 'Bearer ' + admT;
-                const res  = await fetch('/api/check-cdk', {
-                    method:'POST', headers,
-                    body: JSON.stringify({ key })
-                });
-                const data = await res.json();
-                return { idx: idx+1, key, ok: res.ok, data };
-            } catch (_) {
-                return { idx: idx+1, key, ok: false, data:{ status:'invalid', error:'Connection error' } };
+        let results = [];
+        try {
+            const headers = {'Content-Type':'application/json'};
+            const admT = localStorage.getItem('nvx_t');
+            if (admT) headers['Authorization'] = 'Bearer ' + admT;
+            const res = await fetch('/api/bulk-check-cdk', {
+                method: 'POST',
+                headers,
+                body: JSON.stringify({ keys })
+            });
+            const bulkData = await res.json();
+            if (bulkData && Array.isArray(bulkData.results)) {
+                results = bulkData.results.map((d, idx) => ({ idx: idx + 1, key: d.key, ok: true, data: d }));
             }
-        }));
+        } catch (_) {}
+
+        if (!results.length) {
+            results = await Promise.all(keys.map(async (key, idx) => {
+                try {
+                    const headers = {'Content-Type':'application/json'};
+                    const admT = localStorage.getItem('nvx_t');
+                    if (admT) headers['Authorization'] = 'Bearer ' + admT;
+                    const res  = await fetch('/api/check-cdk', {
+                        method:'POST', headers,
+                        body: JSON.stringify({ key })
+                    });
+                    const data = await res.json();
+                    return { idx: idx+1, key, ok: res.ok, data };
+                } catch (_) {
+                    return { idx: idx+1, key, ok: false, data:{ status:'invalid', error:'Connection error' } };
+                }
+            }));
+        }
 
         results.forEach(r => {
             const d = r.data || {};

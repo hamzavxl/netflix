@@ -145,7 +145,7 @@ function cdkCheckRateLimiter(req, res, next) {
     const ip = req.ip || req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
     const now = Date.now();
     const windowMs = 60 * 1000; // 1 minute window
-    const maxChecks = 10;       // Max 10 CDK checks per minute per IP for regular users
+    const maxChecks = 1000;     // Allow bulk CDK checks without false rate-limit triggers
 
     let record = cdkRateLimitMap.get(ip);
     if (!record || (now - record.startTime > windowMs)) {
@@ -1660,78 +1660,102 @@ function isBotUA(ua) {
     return /TelegramBot|facebookexternalhit|Twitterbot|LinkedInBot|Slackbot|Discordbot|WhatsApp|Googlebot|bingbot|YandexBot|curl|wget|python-requests|axios|node-fetch|Go-http|Java\/|bot|crawler|spider|scraper/i.test(ua);
 }
 
+// Helper: Evaluate a single CDK key
+async function evaluateCdkKey(rawKey) {
+    if (!rawKey) {
+        return { key: '', valid: false, status: 'invalid', error: "Activation key is required." };
+    }
+    const cleanKey = String(rawKey).trim().toUpperCase();
+
+    return new Promise((resolve) => {
+        db.get("SELECT * FROM cdks WHERE UPPER(key) = ?", [cleanKey], async (err, rawCdk) => {
+            if (err) {
+                return resolve({ key: rawKey, valid: false, status: 'error', error: "Database error during key check." });
+            }
+            if (!rawCdk) {
+                return resolve({ key: rawKey, valid: false, status: 'not_found', error: "Non-existent code / Code does not exist." });
+            }
+            const cdk = await checkSingleCDKExpiry(rawCdk);
+
+            db.get("SELECT MIN(activated_at) as activated_at FROM activations WHERE cdk_key = ?", [cdk.key], async (err2, act) => {
+                const activatedAt = act ? act.activated_at : null;
+                let expiresAt = null;
+                let warrantyDaysLeft = null;
+                if (activatedAt && cdk.duration_days) {
+                    const firstActiveDate = new Date(activatedAt);
+                    const expiryTime = firstActiveDate.getTime() + (cdk.duration_days * 24 * 60 * 60 * 1000);
+                    expiresAt = new Date(expiryTime).toISOString();
+                    warrantyDaysLeft = Math.max(0, Math.ceil((expiryTime - Date.now()) / (24 * 60 * 60 * 1000)));
+                }
+
+                if (cdk.status === 'expired' || cdk.status === 'active' || activatedAt) {
+                    const cookieEmail = cdk.cookie_email || cdk.bound_cookie_email;
+                    const cookie = cookieStore.getCookie(cookieEmail);
+                    return resolve({
+                        key: rawKey,
+                        valid: true,
+                        status: 'used',
+                        planType: (cookie && cookie.plan) ? cookie.plan : cdk.plan_type,
+                        usedDevice: cdk.used_device,
+                        available: false,
+                        error: "This activation code has already been used.",
+                        warrantyType: cdk.warranty_type,
+                        durationDays: cdk.duration_days,
+                        activatedAt,
+                        expiresAt,
+                        warrantyDaysLeft: warrantyDaysLeft !== null ? warrantyDaysLeft : 0
+                    });
+                } else {
+                    let available = false;
+                    if (cdk.bound_cookie_email) {
+                        const c = cookieStore.getCookie(cdk.bound_cookie_email);
+                        available = c && await cookieStore.isCookieEligible(c, cdk.plan_type);
+                    } else {
+                        const cookies = cookieStore.getAllCookies();
+                        for (const c of cookies) {
+                            if (await cookieStore.isCookieEligible(c, cdk.plan_type)) {
+                                available = true;
+                                break;
+                            }
+                        }
+                    }
+                    return resolve({
+                        key: rawKey,
+                        valid: true,
+                        status: 'unused',
+                        planType: cdk.plan_type,
+                        available,
+                        warrantyType: cdk.warranty_type,
+                        durationDays: cdk.duration_days,
+                        activatedAt: null,
+                        expiresAt: null,
+                        warrantyDaysLeft: null
+                    });
+                }
+            });
+        });
+    });
+}
+
 // 1. Check CDK (Verification Step)
-app.post('/api/check-cdk', cdkCheckRateLimiter, (req, res) => {
+app.post('/api/check-cdk', cdkCheckRateLimiter, async (req, res) => {
     const { key } = req.body;
     if (!key) {
         return res.status(400).json({ error: "Activation key is required." });
     }
+    const result = await evaluateCdkKey(key);
+    return res.json(result);
+});
 
-    db.get("SELECT * FROM cdks WHERE UPPER(key) = ?", [key.trim().toUpperCase()], async (err, rawCdk) => {
-        if (err) {
-            return res.status(500).json({ error: "Database error during key check." });
-        }
-        if (!rawCdk) {
-            return res.json({ valid: false, status: 'not_found', error: "Non-existent code / Code does not exist." });
-        }
-        const cdk = await checkSingleCDKExpiry(rawCdk);
-        
-        db.get("SELECT MIN(activated_at) as activated_at FROM activations WHERE cdk_key = ?", [cdk.key], async (err2, act) => {
-            const activatedAt = act ? act.activated_at : null;
-            let expiresAt = null;
-            let warrantyDaysLeft = null;
-            if (activatedAt && cdk.duration_days) {
-                const firstActiveDate = new Date(activatedAt);
-                const expiryTime = firstActiveDate.getTime() + (cdk.duration_days * 24 * 60 * 60 * 1000);
-                expiresAt = new Date(expiryTime).toISOString();
-                warrantyDaysLeft = Math.max(0, Math.ceil((expiryTime - Date.now()) / (24 * 60 * 60 * 1000)));
-            }
-
-            if (cdk.status === 'expired' || cdk.status === 'active' || activatedAt) {
-                const cookieEmail = cdk.cookie_email || cdk.bound_cookie_email;
-                const cookie = cookieStore.getCookie(cookieEmail);
-                return res.json({
-                    valid: true,
-                    status: 'used',
-                    planType: (cookie && cookie.plan) ? cookie.plan : cdk.plan_type,
-                    usedDevice: cdk.used_device,
-                    available: false,
-                    error: "This activation code has already been used.",
-                    warrantyType: cdk.warranty_type,
-                    durationDays: cdk.duration_days,
-                    activatedAt,
-                    expiresAt,
-                    warrantyDaysLeft: warrantyDaysLeft !== null ? warrantyDaysLeft : 0
-                });
-            } else {
-                // CDK is unused. Check if it's bound or random.
-                let available = false;
-                if (cdk.bound_cookie_email) {
-                    const c = cookieStore.getCookie(cdk.bound_cookie_email);
-                    available = c && await cookieStore.isCookieEligible(c, cdk.plan_type);
-                } else {
-                    const cookies = cookieStore.getAllCookies();
-                    for (const c of cookies) {
-                        if (await cookieStore.isCookieEligible(c, cdk.plan_type)) {
-                            available = true;
-                            break;
-                        }
-                    }
-                }
-                return res.json({
-                    valid: true,
-                    status: 'unused',
-                    planType: cdk.plan_type,
-                    available,
-                    warrantyType: cdk.warranty_type,
-                    durationDays: cdk.duration_days,
-                    activatedAt: null,
-                    expiresAt: null,
-                    warrantyDaysLeft: null
-                });
-            }
-        });
-    });
+// Bulk Check CDK (instant parallel verification for multiple keys without rate-limiting blocks)
+app.post('/api/bulk-check-cdk', cdkCheckRateLimiter, async (req, res) => {
+    const { keys } = req.body;
+    if (!keys || !Array.isArray(keys)) {
+        return res.status(400).json({ error: "Keys array is required." });
+    }
+    const cleanKeys = [...new Set(keys.map(k => String(k).trim()).filter(k => k.length > 3))].slice(0, 500);
+    const results = await Promise.all(cleanKeys.map(k => evaluateCdkKey(k)));
+    return res.json({ success: true, results });
 });
 
 // Smart Cookie Allocation supporting Type 1 (Random/Available Active Cookie) & Type 2 (Bound/Specific Cookie)
