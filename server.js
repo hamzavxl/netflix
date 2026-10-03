@@ -853,11 +853,71 @@ app.post('/api/vxl/check-cookies', async (req, res) => {
         let billingDate = 'Unknown';
         const formattedDateMatch = h.match(/"nextBillingDate"[^}]*"value"\s*:\s*"([^"]+)"/i) ||
                                    h.match(/"formattedNextBillingDate"\s*:\s*"([^"]+)"/i) ||
-                                   h.match(/"nextBillingDate"\s*:\s*"([^"]+)"/i);
-        if (formattedDateMatch && formattedDateMatch[1] !== 'null') {
-            billingDate = decodeEsc(formattedDateMatch[1]);
+                                   h.match(/"nextBillingDate"\s*:\s*"([^"]+)"/i) ||
+                                   h.match(/"nextPaymentDate"[^}]*"value"\s*:\s*"([^"]+)"/i) ||
+                                   h.match(/"nextPaymentDate"\s*:\s*"([^"]+)"/i);
+
+        let partnerName = null;
+        const partnerMatch = h.match(/"partnerDisplayName"[^}]*?:\s*(?:\{[^}]*"value"\s*:\s*"([^"]+)"|"([^"]+)")/i) ||
+                             h.match(/"partnerDisplayName"\s*:\s*"([^"]+)"/i);
+        if (partnerMatch && (partnerMatch[1] || partnerMatch[2])) {
+            const val = (partnerMatch[1] || partnerMatch[2]).trim();
+            if (val !== 'null' && val.toLowerCase() !== 'string') partnerName = decodeEsc(val);
+        }
+        if (!partnerName) {
+            const partnerTextMatch = h.match(/Billed through ([^<.,\n"]+) package/i) ||
+                                     h.match(/Billed through ([^<.,\n"]+)/i) ||
+                                     h.match(/Factur[ée] via (?:l'offre |le forfait )?([^<.,\n"]+)/i) ||
+                                     h.match(/Facturado a trav[ée]s del paquete de ([^<.,\n"]+)/i) ||
+                                     h.match(/Facturado a trav[ée]s de ([^<.,\n"]+)/i) ||
+                                     h.match(/تتم الفوترة من خلال ([^<.,\n"]+)/i);
+            if (partnerTextMatch && partnerTextMatch[1]) {
+                partnerName = decodeEsc(partnerTextMatch[1]).replace(/package|paquete|offre/gi, '').trim();
+            }
+        }
+        if (!partnerName) {
+            const pmMatch = h.match(/"paymentMethod"[^}]*"value"\s*:\s*"([^"]+)"/i) || h.match(/"paymentMethod"\s*:\s*"([^"]+)"/i);
+            if (pmMatch && pmMatch[1]) {
+                const pm = pmMatch[1].toUpperCase();
+                if (pm.includes('AIRTEL')) partnerName = 'Airtel';
+                else if (pm.includes('JIO')) partnerName = 'Jio';
+                else if (pm.includes('ILIAD') || pm.includes('FREE')) partnerName = 'Free';
+                else if (pm.includes('ORANGE')) partnerName = 'Orange';
+                else if (pm.includes('VODAFONE')) partnerName = 'Vodafone';
+                else if (pm.includes('SFR')) partnerName = 'SFR';
+                else if (pm.includes('BOUY')) partnerName = 'Bouygues';
+                else if (pm.includes('TIM')) partnerName = 'TIM';
+                else if (pm.includes('CLARO')) partnerName = 'Claro';
+                else if (pm.includes('TURK')) partnerName = 'Turkcell';
+                else if (pm.includes('TMOBILE') || pm.includes('T_MOBILE')) partnerName = 'T-Mobile';
+                else if (pm.includes('TELKOMSEL')) partnerName = 'Telkomsel';
+                else if (pm.includes('ACT FIBERNET') || pm.includes('ACTFIBERNET')) partnerName = 'ACT Fibernet';
+                else if (pm.includes('TELNOR')) partnerName = 'Telnor';
+            }
+        }
+
+        let dateStr = null;
+        if (formattedDateMatch && formattedDateMatch[1] && formattedDateMatch[1] !== 'null') {
+            dateStr = decodeEsc(formattedDateMatch[1]);
         } else {
-            const cancelMatch = h.match(/"cancelDate"\s*:\s*"([^"T]+)T/i) || h.match(/"cancelDate"\s*:\s*"([^"]+)"/i);
+            let cancelMatch = h.match(/"cancelDate"\s*:\s*"([^"T]+)T/i) || h.match(/"cancelDate"\s*:\s*"([^"]+)"/i);
+            
+            if (!cancelMatch) {
+                try {
+                    const rBilling = await proxy.httpGet('https://www.netflix.com/BillingActivity', {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0',
+                        'Cookie': cookieStr,
+                        'Accept-Language': 'en-US,en;q=0.9'
+                    });
+                    const hBilling = rBilling.body || '';
+                    cancelMatch = hBilling.match(/"cancelDate"\s*:\s*"([^"T]+)T/i) || hBilling.match(/"cancelDate"\s*:\s*"([^"]+)"/i);
+                    if (!partnerName) {
+                        const partnerB = hBilling.match(/included with ([A-Za-z0-9 ]+)\./i);
+                        if (partnerB && partnerB[1]) partnerName = partnerB[1].trim();
+                    }
+                } catch (_) {}
+            }
+
             if (cancelMatch && cancelMatch[1] && cancelMatch[1] !== 'null') {
                 const rawDate = cancelMatch[1];
                 const dateParts = rawDate.split('T')[0].split('-');
@@ -866,48 +926,24 @@ app.post('/api/vxl/check-cookies', async (req, res) => {
                     const monthNum = parseInt(dateParts[1]);
                     const day = parseInt(dateParts[2]);
                     const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-                    billingDate = `Cancelled: ${day} ${months[monthNum - 1]} ${year}`;
+                    dateStr = `${day} ${months[monthNum - 1]} ${year}`;
                 } else {
-                    billingDate = `Cancelled: ${rawDate}`;
+                    dateStr = rawDate;
                 }
             } else {
-                // Partner Telecom Bundle detection
-                const partnerTextMatch = h.match(/Billed through ([^<.,\n"]+) package/i) ||
-                                         h.match(/Billed through ([^<.,\n"]+)/i) ||
-                                         h.match(/Factur[ée] via (?:l'offre |le forfait )?([^<.,\n"]+)/i) ||
-                                         h.match(/Facturado a trav[ée]s de ([^<.,\n"]+)/i) ||
-                                         h.match(/تتم الفوترة من خلال ([^<.,\n"]+)/i);
-                if (partnerTextMatch && partnerTextMatch[1]) {
-                    billingDate = `Partner: ${decodeEsc(partnerTextMatch[1]).trim()}`;
-                } else {
-                    const pmMatch = h.match(/"paymentMethod"[^}]*"value"\s*:\s*"([^"]+)"/i);
-                    if (pmMatch && pmMatch[1]) {
-                        const pm = pmMatch[1].toUpperCase();
-                        if (pm.includes('AIRTEL')) billingDate = 'Partner: Airtel';
-                        else if (pm.includes('JIO')) billingDate = 'Partner: Reliance Jio';
-                        else if (pm.includes('ILIAD') || pm.includes('FREE')) billingDate = 'Partner: Free Telecom';
-                        else if (pm.includes('ORANGE')) billingDate = 'Partner: Orange';
-                        else if (pm.includes('VODAFONE')) billingDate = 'Partner: Vodafone';
-                        else if (pm.includes('SFR')) billingDate = 'Partner: SFR';
-                        else if (pm.includes('BOUY')) billingDate = 'Partner: Bouygues';
-                        else if (pm.includes('TIM')) billingDate = 'Partner: TIM';
-                        else if (pm.includes('CLARO')) billingDate = 'Partner: Claro';
-                        else if (pm.includes('TURK')) billingDate = 'Partner: Turkcell';
-                        else if (pm.includes('TMOBILE') || pm.includes('T_MOBILE')) billingDate = 'Partner: T-Mobile';
-                        else if (pm.includes('PARTNER') || pm.includes('BILLED')) billingDate = `Partner: ${pm.replace(/_BILLED|_PI|_BUNDLE/g, '').toLowerCase()}`;
-                    } else {
-                        const partnerMatch = h.match(/"partnerDisplayName"\s*:\s*"([^"]+)"/i);
-                        if (partnerMatch && partnerMatch[1] && partnerMatch[1] !== 'null') {
-                            billingDate = `Partner: ${decodeEsc(partnerMatch[1])}`;
-                        } else {
-                            const freeTextMatch = h.match(/(?:next bill is on|your next billing date is|renews on|membership ends on)\s*([A-Za-z0-9, ]{3,25})/i);
-                            if (freeTextMatch && freeTextMatch[1]) {
-                                billingDate = freeTextMatch[1].trim();
-                            }
-                        }
-                    }
+                const freeTextMatch = h.match(/(?:next bill is on|your next billing date is|renews on|membership ends on)\s*([A-Za-z0-9, ]{3,25})/i);
+                if (freeTextMatch && freeTextMatch[1]) {
+                    dateStr = freeTextMatch[1].trim();
                 }
             }
+        }
+
+        if (dateStr && partnerName) {
+            billingDate = `${dateStr} (${partnerName})`;
+        } else if (dateStr) {
+            billingDate = dateStr;
+        } else if (partnerName) {
+            billingDate = `Partner: ${partnerName}`;
         }
         
         const updatedCookieStr = mergeCookies(cookieStr, allSetCookies);
