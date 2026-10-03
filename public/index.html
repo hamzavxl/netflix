@@ -9,10 +9,37 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link rel="stylesheet" href="style.css?v=2.4">
+    <link rel="stylesheet" href="style.css?v=3.0">
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 2v20h4V12l8 10h4V2h-4v10L8 2H4z' fill='%23E50914'/%3E%3C/svg%3E">
 </head>
 <body>
+
+    <!-- ══ NETFLIX REFRESH / PAGE PRELOADER ══ -->
+    <div id="nf-page-preloader" class="nf-preloader" aria-hidden="true">
+        <div class="nf-preloader-inner">
+            <div class="nf-spinner-box">
+                <svg class="nf-spinner-svg" viewBox="0 0 111 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M0 0H37V200H0V0Z" fill="#E50914"/>
+                    <path d="M74 0H111V200H74V0Z" fill="#E50914"/>
+                    <path d="M0 0H37L111 200H74L0 0Z" fill="#B81D24"/>
+                    <polygon points="0,0 37,0 111,200 74,200" fill="url(#nf-sheen)"/>
+                    <defs>
+                        <linearGradient id="nf-sheen" x1="0%" y1="0%" x2="100%" y2="100%">
+                            <stop offset="0%" stop-color="#ffffff" stop-opacity="0.3"/>
+                            <stop offset="50%" stop-color="#000000" stop-opacity="0.2"/>
+                            <stop offset="100%" stop-color="#ffffff" stop-opacity="0.1"/>
+                        </linearGradient>
+                    </defs>
+                </svg>
+            </div>
+            <div class="nf-loader-track">
+                <div class="nf-loader-bar"></div>
+            </div>
+            <div class="nf-loader-brand">
+                <span>NETVXL</span>
+            </div>
+        </div>
+    </div>
 
     <div class="bg-grid"></div>
     <div class="blob b1"></div>
@@ -378,6 +405,6 @@
         </a>
     </div>
 
-    <script src="app.js?v=2.3"></script>
+    <script src="app.js?v=3.0"></script>
 </body>
 </html>

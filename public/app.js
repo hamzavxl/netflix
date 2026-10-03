@@ -6,6 +6,40 @@ document.addEventListener('keydown', e => {
     if (e.ctrlKey && ['U', 'u', 'S', 's'].includes(e.key)) { e.preventDefault(); e.stopPropagation(); }
 });
 
+// Netflix Page Refresh & Preloader Controller
+(function() {
+    const preloader = document.getElementById('nf-page-preloader');
+    if (!preloader) return;
+
+    function hidePreloader() {
+        if (!preloader.classList.contains('fade-out')) {
+            preloader.classList.add('fade-out');
+            setTimeout(() => {
+                preloader.style.display = 'none';
+            }, 650);
+        }
+    }
+
+    const minTimePromise = new Promise(resolve => setTimeout(resolve, 800));
+    const loadPromise = new Promise(resolve => {
+        if (document.readyState === 'complete') {
+            resolve();
+        } else {
+            window.addEventListener('load', resolve, { once: true });
+        }
+    });
+
+    Promise.all([minTimePromise, loadPromise]).then(hidePreloader);
+    setTimeout(hidePreloader, 3500);
+
+    window.addEventListener('beforeunload', () => {
+        try {
+            preloader.style.display = 'flex';
+            preloader.classList.remove('fade-out');
+        } catch (_) {}
+    });
+})();
+
 document.addEventListener('DOMContentLoaded', () => {
 
     /* ── Elements ── */
