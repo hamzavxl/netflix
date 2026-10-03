@@ -120,10 +120,10 @@ async function httpGet(url, headers = {}) {
                 if (_notifyFn) {
                     try {
                         await _notifyFn(
-                            `⚠️ *Proxy Failure Alert*\n\n` +
+                            `[Proxy Failure Alert]\n\n` +
                             `The proxy \`${_proxyUrl}\` has failed *${_failCount}* consecutive times.\n\n` +
-                            `🔄 Automatically switched to *Local IP* mode.\n` +
-                            `Please update or disable proxy in ⚙️ Settings → 🌐 Proxy.`
+                            `Automatically switched to *Local IP* mode.\n` +
+                            `Please update or disable proxy in Settings -> Proxy.`
                         );
                     } catch (_) {}
                 }
