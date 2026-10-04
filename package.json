@@ -11,6 +11,7 @@
     "adm-zip": "^0.6.0",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
+    "geoip-lite": "^1.4.10",
     "https-proxy-agent": "^9.1.0",
     "node-telegram-bot-api": "^0.64.0",
     "pg": "^8.22.0",

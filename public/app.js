@@ -850,3 +850,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 })();
 
+/* ═══════ REAL-TIME VISITOR TRACKING & HEARTBEAT ═══════ */
+(function initVisitorTracking() {
+    try {
+        let vid = localStorage.getItem('nvx_vid');
+        if (!vid) {
+            vid = 'v_' + Math.random().toString(36).substring(2, 10) + '_' + Date.now().toString(36);
+            localStorage.setItem('nvx_vid', vid);
+        }
+
+        function sendVisit() {
+            fetch('/api/track/visit', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sessionId: vid,
+                    path: window.location.pathname || '/',
+                    referrer: document.referrer || '',
+                    screenWidth: window.innerWidth || 0
+                })
+            }).catch(() => {});
+        }
+
+        function sendPing() {
+            fetch('/api/track/ping', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    sessionId: vid,
+                    path: window.location.pathname || '/'
+                })
+            }).catch(() => {});
+        }
+
+        sendVisit();
+        setInterval(sendPing, 40000); // 40-second active heartbeat
+    } catch (_) {}
+})();
+

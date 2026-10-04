@@ -711,7 +711,7 @@ select.inp option{background:var(--bg2);color:var(--t1)}
         <!-- Card 4: Total CDKs -->
         <div class="sc c-violet">
           <div class="sc-shine"></div>
-          <div style="display:flex;justify-content:between;align-items:flex-start">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
             <div style="flex:1">
               <div class="sc-lbl">Total CDK Keys</div>
               <div class="sc-val" id="s5">0</div>
@@ -725,6 +725,48 @@ select.inp option{background:var(--bg2);color:var(--t1)}
           <div class="sc-spark">
             <svg viewBox="0 0 100 30" style="width:100%;height:35px;fill:none;stroke:var(--violet);stroke-width:1.8;filter:drop-shadow(0 2px 6px rgba(167,139,250,0.15))">
               <path d="M0 22 Q 15 25, 30 12 T 60 8 T 90 2 L 100 5" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Card 5: Online Now -->
+        <div class="sc c-cyan">
+          <div class="sc-shine"></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="flex:1">
+              <div class="sc-lbl">Online Now</div>
+              <div class="sc-val" id="s-online">0</div>
+            </div>
+            <div class="sc-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3" fill="#10b981"/><circle cx="12" cy="12" r="8" stroke="#22d3ee"/></svg></div>
+          </div>
+          <div class="sc-trend up">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><circle cx="12" cy="12" r="3" fill="#10b981"/></svg>
+            <span id="s-online-trend">Live Active</span>
+          </div>
+          <div class="sc-spark">
+            <svg viewBox="0 0 100 30" style="width:100%;height:35px;fill:none;stroke:var(--cyan);stroke-width:1.8;filter:drop-shadow(0 2px 6px rgba(34,211,238,0.15))">
+              <path d="M0 15 Q 20 8, 45 18 T 100 10" />
+            </svg>
+          </div>
+        </div>
+
+        <!-- Card 6: Top Country -->
+        <div class="sc c-amber">
+          <div class="sc-shine"></div>
+          <div style="display:flex;justify-content:space-between;align-items:flex-start">
+            <div style="flex:1">
+              <div class="sc-lbl">Top Country</div>
+              <div class="sc-val" id="s-country" style="font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">DZ (100%)</div>
+            </div>
+            <div class="sc-icon"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg></div>
+          </div>
+          <div class="sc-trend up">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><polyline points="18 15 12 9 6 15"/></svg>
+            <span id="s-country-name">Algeria</span>
+          </div>
+          <div class="sc-spark">
+            <svg viewBox="0 0 100 30" style="width:100%;height:35px;fill:none;stroke:var(--amber);stroke-width:1.8;filter:drop-shadow(0 2px 6px rgba(245,158,11,0.15))">
+              <path d="M0 20 Q 25 5, 50 15 T 100 8" />
             </svg>
           </div>
         </div>
@@ -1552,6 +1594,11 @@ async function loadDash(){
     cnt('s2',s.activeCookies);
     cnt('s3',s.availableSeats);
     cnt('s5',s.totalCdks);
+    if(document.getElementById('s-online')) cnt('s-online', s.liveNow || 0);
+    if(document.getElementById('s-country') && s.topCountry) {
+      document.getElementById('s-country').textContent = `${s.topCountry.name || s.topCountry.code || 'DZ'} (${s.topCountry.percentage || 0}%)`;
+      if(document.getElementById('s-country-name')) document.getElementById('s-country-name').textContent = `${s.topCountry.code} (${s.topCountry.count || 0} visits)`;
+    }
     
     document.getElementById('badge-ck').textContent=s.totalCookies;
     document.getElementById('badge-cdk').textContent=s.totalCdks;

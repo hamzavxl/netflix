@@ -141,6 +141,25 @@ async function createTables() {
             last_login TEXT
         )`);
 
+        sqliteDb.run(`CREATE TABLE IF NOT EXISTS visitors (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            session_id TEXT UNIQUE,
+            ip TEXT,
+            country_code TEXT DEFAULT 'XX',
+            country_name TEXT DEFAULT 'Unknown',
+            city TEXT DEFAULT '',
+            device TEXT DEFAULT 'Desktop',
+            browser TEXT DEFAULT 'Other',
+            os TEXT DEFAULT 'Other',
+            path TEXT DEFAULT '/',
+            referrer TEXT DEFAULT '',
+            visit_count INTEGER DEFAULT 1,
+            created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            last_seen DATETIME DEFAULT CURRENT_TIMESTAMP
+        )`);
+        sqliteDb.run("CREATE INDEX IF NOT EXISTS idx_visitors_last_seen ON visitors(last_seen)", () => {});
+        sqliteDb.run("CREATE INDEX IF NOT EXISTS idx_visitors_country ON visitors(country_code)", () => {});
+
          // Migration to add created_by to cdks if it doesn't exist
          sqliteDb.run("ALTER TABLE cdks ADD COLUMN created_by TEXT", () => {});
          sqliteDb.run("ALTER TABLE cdks ADD COLUMN cookie_email TEXT", () => {});
